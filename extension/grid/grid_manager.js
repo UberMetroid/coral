@@ -31,6 +31,7 @@ export class GridManager {
         this._shell_settings = new Gio.Settings({ schema_id: 'org.gnome.shell' });
         this._folder_settings = new Gio.Settings({ schema_id: APP_FOLDERS_SCHEMA });
         this._currently_updating = false;
+        this._reorder_pending = false;
         this._reorder_timeout_id = 0;
         this._current_style = null;
 
@@ -131,8 +132,12 @@ export class GridManager {
 
     reorder_grid() {
         if (!this._app_display) return;
-        if (this._currently_updating || this._app_display._pageManager?._updatingPages) return;
+        if (this._currently_updating || this._app_display._pageManager?._updatingPages) {
+            this._reorder_pending = true;
+            return;
+        }
         this._currently_updating = true;
+        this._reorder_pending = false;
 
         try {
             if (this.settings.auto_group_overflow()) {
@@ -168,6 +173,10 @@ export class GridManager {
                 console.error(err);
             }
             this._currently_updating = false;
+            if (this._reorder_pending) {
+                this._reorder_pending = false;
+                this.reorder_grid();
+            }
             return GLib.SOURCE_REMOVE;
         });
         GLib.Source.set_name_by_id(this._reorder_timeout_id, '[coral] reorder-grid');
@@ -176,21 +185,31 @@ export class GridManager {
     destroy() {
         Main.overview.disconnectObject(this);
         this._controls?._stateAdjustment?.disconnectObject(this);
-        this._app_system.disconnectObject(this);
-        this._shell_settings.disconnectObject(this);
-        this.ext_settings.disconnectObject(this);
-        this._folder_settings.disconnectObject(this);
+        this._app_system?.disconnectObject(this);
+        this._shell_settings?.disconnectObject(this);
+        this.ext_settings?.disconnectObject(this);
+        this._folder_settings?.disconnectObject(this);
 
         if (this._reorder_timeout_id !== 0) {
             GLib.Source.remove(this._reorder_timeout_id);
             this._reorder_timeout_id = 0;
         }
         this._currently_updating = false;
+        this._reorder_pending = false;
         this._sync_folder_dialogs_style(true);
-        this._injection_manager.clear();
+        this._injection_manager?.clear();
         try {
             this._app_display?._redisplay();
         } catch (_e) { /* ignore */ }
         this.unload_theme();
+        this._injection_manager = null;
+        this._app_system = null;
+        this._controls = null;
+        this._app_display = null;
+        this._shell_settings = null;
+        this._folder_settings = null;
+        this.settings = null;
+        this.ext_settings = null;
+        this.extension = null;
     }
 }

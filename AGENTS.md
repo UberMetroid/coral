@@ -11,7 +11,7 @@ Coral (`coral@ubermetroid.github.io`) is built on four uncompromising engineerin
    - Zero dynamic code evaluation (`eval`, `Function`) and zero external subprocesses (`Gio.Subprocess`, `GLib.spawn_*`) in the compositor.
    - All `GLib.timeout_add` sources are deterministically named via `GLib.Source.set_name_by_id` and removed on teardown.
 4. **OWASP Zero-Trust & Multi-Distro Security**:
-   - Zero shell subprocesses or network calls; integrates natively with `systemd-logind` lock/suspend via `"session-modes": ["user"]` and `org.gnome.desktop.app-folders` GSettings across Fedora, Debian, Ubuntu, Arch, openSUSE, and NixOS.
+   - Zero shell subprocesses or network calls; integrates natively with `systemd-logind` lock/suspend and `org.gnome.desktop.app-folders` GSettings across Fedora, Debian, Ubuntu, Arch, openSUSE, and NixOS.
    - Zero module-scope compositor access (`Main.overview._overview._controls` is accessed strictly inside `enable()`).
 
 ---
@@ -30,7 +30,7 @@ Coral (`coral@ubermetroid.github.io`) is built on four uncompromising engineerin
 ## 3. Process-Boundary & GNOME Shell / EGO Lifecycle Invariants (`tests/verify.js`)
 
 - **ES2022 Strictness**: Zero `var` declarations (`const`/`let` only) and zero loose equality operators (`===`/`!==` only).
-- **Process Boundary Separation**: `extension/prefs.js` runs in the GTK4 `gnome-extensions-app` process. Neither `prefs.js` nor any module in its import chain (`grid/grid_sorter.js`, `grid/auto_grouper.js`, `ui/folder_style.js`, `ui/settings/gsettings.js`, `ui/settings/color.js`, `ui/settings/prefs_pages.js`) may import compositor-only typelibs (`gi://Meta`, `gi://Clutter`, `gi://St`, `gi://Shell`, `resource:///org/gnome/shell/*`).
+- **Process Boundary Separation**: `extension/prefs.js` runs in the GTK4 `gnome-extensions-app` process. Neither `prefs.js` nor any module in its import chain (`grid/grid_sorter.js`, `grid/auto_grouper.js`, `grid/folder_sorter.js`, `ui/folder_style.js`, `ui/settings/gsettings.js`, `ui/settings/color.js`, `ui/settings/prefs_pages.js`) may import compositor-only typelibs (`gi://Meta`, `gi://Clutter`, `gi://St`, `gi://Shell`, `resource:///org/gnome/shell/*`).
 - **Deterministic EGO Teardown**: `extension/extension.js` performs zero top-level work at import time and deterministically cleans up all `InjectionManager` overrides, `connectObject` listeners, named `GLib` timers, and loaded stylesheets on `disable()`.
 
 ---

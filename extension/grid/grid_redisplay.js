@@ -54,6 +54,7 @@ export function build_load_apps_override(original_load_apps, settings) {
             if (!icon) {
                 const resolved_app = app_sys.lookup_app(app_id) || fav_app;
                 icon = new AppDisplay.AppIcon(resolved_app, { isDraggable: is_draggable });
+                this._items.set(app_id, icon);
             }
             app_icons.push(icon);
             existing_ids.add(app_id);
@@ -80,8 +81,8 @@ export function build_redisplay_override(settings) {
         const new_apps = this._loadApps().sort(this._compareItems.bind(this));
         const new_app_ids = new Set(new_apps.map((icon) => icon.id));
 
-        const added_apps = new Set(new_apps.filter((icon) => !current_app_ids.has(icon.id)));
-        const removed_apps = current_apps.filter((icon) => !new_app_ids.has(icon.id));
+        const added_apps = new Set(new_apps.filter((icon) => !current_apps.includes(icon) && !current_app_ids.has(icon.id)));
+        const removed_apps = current_apps.filter((icon) => !new_apps.includes(icon) && !new_app_ids.has(icon.id));
 
         for (let i = 0; i < removed_apps.length; i += 1) {
             const icon = removed_apps[i];

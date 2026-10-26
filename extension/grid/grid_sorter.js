@@ -2,6 +2,7 @@
 // Pure alphabetical and folder-position comparators for the GNOME Shell App Grid and App Folders.
 
 export const MAX_GRID_APPS = 512;
+export const MAX_COMPARISON_FOLDERS = 64;
 
 export function alphabetical_compare(name_a, name_b, reverse = false) {
     const a = String(name_a ?? '').toLowerCase();
@@ -33,8 +34,9 @@ export function compare_grid_items(item_a, item_b, folder_position = 'alphabetic
 
     const id_a = resolve_item_id(item_a);
     const id_b = resolve_item_id(item_b);
-    const is_folder_a = folder_ids.includes(id_a);
-    const is_folder_b = folder_ids.includes(id_b);
+    const bounded_folders = folder_ids.slice(0, MAX_COMPARISON_FOLDERS);
+    const is_folder_a = bounded_folders.includes(id_a);
+    const is_folder_b = bounded_folders.includes(id_b);
 
     if (is_folder_a === is_folder_b) {
         return alphabetical_compare(name_a, name_b, reverse);

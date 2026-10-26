@@ -21,7 +21,7 @@ export function parse_rgba(input) {
 
     if (s.startsWith('#')) {
         const hex = s.slice(1);
-        if (hex.length === 3) {
+        if (/^[0-9a-fA-F]{3}$/.test(hex)) {
             return {
                 red: clamp_byte(parseInt(hex[0] + hex[0], 16)),
                 green: clamp_byte(parseInt(hex[1] + hex[1], 16)),
@@ -29,7 +29,7 @@ export function parse_rgba(input) {
                 alpha: 1.0,
             };
         }
-        if (hex.length === 6 || hex.length === 8) {
+        if (/^[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/.test(hex)) {
             const alpha = hex.length === 8 ? parseInt(hex.slice(6, 8), 16) / 255 : 1.0;
             return {
                 red: clamp_byte(parseInt(hex.slice(0, 2), 16)),

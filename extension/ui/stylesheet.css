@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 /* Coral stylesheet for GNOME Shell App Folder popup dialog accent borders. */
 
+.coral-folder-dialog,
 .app-folder-dialog.coral-folder-dialog {
     transition-duration: 150ms;
 }

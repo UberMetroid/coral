@@ -87,7 +87,12 @@ function build_grid_and_autogroups_page(ext_settings, settings, signals) {
         valign: Gtk.Align.CENTER,
     });
     dissolve_btn.connect('clicked', () => {
-        try { dissolve_coral_folders(); } catch (_e) { /* ignore */ }
+        try {
+            if (settings.auto_group_overflow()) {
+                settings.set_auto_group_overflow(false);
+            }
+            dissolve_coral_folders();
+        } catch (_e) { /* ignore */ }
     });
     dissolve_row.add_suffix(dissolve_btn);
     dissolve_row.activatable_widget = dissolve_btn;

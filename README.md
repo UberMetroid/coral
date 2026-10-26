@@ -32,7 +32,7 @@ Derived from [Alphabetical App Grid](https://github.com/stuarthayhurst/alphabeti
 
 ## Quick Install
 
-Download `coral@ubermetroid.github.io.shell-extension.zip` from [**GitHub Releases (`v1.0.0`)**](https://github.com/UberMetroid/coral/releases/latest):
+Download `coral@ubermetroid.github.io.shell-extension.zip` from [**GitHub Releases (`v1.1.0`)**](https://github.com/UberMetroid/coral/releases/latest):
 
 ```bash
 gnome-extensions install --force coral@ubermetroid.github.io.shell-extension.zip
@@ -53,7 +53,7 @@ gnome-extensions prefs coral@ubermetroid.github.io
 | :--- | :--- |
 | **1. Grid & Auto-Groups** | **Smart Auto-Group to Prevent Overflow Page** toggle, **Auto-Group Strategy** (`Only When Needed to Stop Overflow Page` vs. `Always Group All Apps by Category`), **Target Icons Per Page** (`12–48`, default `24`), **Unpack Auto-Created Category Folders**, **Folder Placement** (`Alphabetical`, `Start of Grid`, `End of Grid`), **Sort Folder Contents Alphabetically** toggle, **Reverse Order (`Z -> A`)** toggle, **Show Pinned Favorites in App Grid** toggle, **Always Open App Grid on First Page** toggle, and **Reset to Coral Defaults**. |
 | **2. Folder Styling** | **Show App Folder Accent Border** toggle, **Accent Border Color** picker, **Quick Color Presets** (*Gruvbox Amber*, *Kelp Emerald*, *Ocean Cyan*, *Coral Red*), **Border Width** (`0–8 px`, default `2 px`), and **Border Corner Radius** (`0–36 px`, default `24 px`). |
-| **3. About & Support** | Release version (`v1.0.0`), `GPL-3.0-or-later` license & Stuart Hayhurst (`Alphabetical App Grid`) attribution, **Star Coral on GitHub**, **Tuition, Not Coffee — Help send my daughter to college**, **Project Website**, and **Report an Issue**. |
+| **3. About & Support** | Release version (`v1.1.0`), `GPL-3.0-or-later` license & Stuart Hayhurst (`Alphabetical App Grid`) attribution, **Star Coral on GitHub**, **Tuition, Not Coffee — Help send my daughter to college**, **Project Website**, and **Report an Issue**. |
 
 ---
 
@@ -61,8 +61,8 @@ gnome-extensions prefs coral@ubermetroid.github.io
 
 Coral works out of the box across **GNOME Shell 45, 46, 47, 48, 49, and 50** on **Fedora, Debian, Ubuntu, Arch Linux, openSUSE, and NixOS**:
 
-- **`systemd-logind` Lock & Suspend Lifecycle**: Declares `"session-modes": ["user"]` and cleanly restores `AppDisplay.AppDisplay.prototype` via `InjectionManager.clear()`, cancels any pending `[coral] reorder-grid` timer, disconnects all `connectObject` listeners, and unloads the folder-dialog stylesheet on screen lock (`unlock-dialog`) or disable.
-- **Universal `.desktop` Category Support**: Uses `Shell.AppSystem.get_default()`, `GioUnix.DesktopAppInfo.get_categories()`, and `org.gnome.desktop.app-folders` so native packages (`.rpm`, `.deb`, `pacman`), Flatpaks, Snaps, Steam games, and AppImages sort and auto-group identically across all distributions.
+- **`systemd-logind` Lock & Suspend Lifecycle**: Cleanly restores `AppDisplay.AppDisplay.prototype` via `InjectionManager.clear()`, coalesces rapid grid updates while canceling any pending `[coral] reorder-grid` timer on teardown, disconnects all `connectObject` listeners, releases owned references, and unloads the folder-dialog stylesheet on screen lock or disable.
+- **Universal `.desktop` Category & User `excluded-apps` Support**: Uses `Shell.AppSystem.get_default()`, `GioUnix.DesktopAppInfo.get_categories()`, and `org.gnome.desktop.app-folders` (including user `excluded-apps` respect) so native packages (`.rpm`, `.deb`, `pacman`), Flatpaks, Snaps, Steam games, and AppImages sort and auto-group identically across all distributions.
 - **Zero Subprocesses or Telemetry**: Never spawns external processes (`GLib.spawn_*` / `Gio.Subprocess`) or makes network calls.
 
 ---

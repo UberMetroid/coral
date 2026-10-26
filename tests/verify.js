@@ -108,9 +108,9 @@ function verify_process_boundaries_and_invariants() {
         'Star Coral on GitHub', 'Tuition, Not Coffee — Help send my daughter to college',
         'https://ubermetroid.github.io/tuition-not-coffee',
         'Derived from Alphabetical App Grid by Stuart Hayhurst',
-        '[coral] reorder-grid', 'this._injection_manager.clear()', 'dissolve_coral_folders',
+        '[coral] reorder-grid', 'this._injection_manager?.clear()', 'dissolve_coral_folders',
         '"45"', '"50"', '"settings-schema": "org.gnome.shell.extensions.coral"',
-        'name="auto-group-overflow"', 'name="folder-order-position"', 'v1.0.0',
+        'name="auto-group-overflow"', 'name="folder-order-position"', 'v1.1.0',
         'this.unload_theme()', 'load_stylesheet(file)', 'Support &amp; Community',
     ];
     for (const req of reqs) assert(combined.includes(req), `Missing invariant: ${req}`);
@@ -139,19 +139,14 @@ async function verify_behavioral_and_gtk_suite() {
     assert(FOLDER_POSITIONS.length === 3 && AUTO_GROUP_MODES.length === 2 && BORDER_PRESETS.length === 4, 'enums');
     assert(MAX_GRID_APPS === 512 && MAX_FOLDERS === 64 && CATEGORY_BUCKETS.length === 9, 'constants');
 
-    s.set_folder_order_position('start');
-    assert(s.folder_order_position() === 'start', 'folder pos start');
-    s.set_folder_order_position('invalid');
-    assert(s.folder_order_position() === 'alphabetical', 'folder pos fallback');
-    s.set_max_items_per_page(99);
-    assert(s.max_items_per_page() === 48, 'clamp max items per page');
-    s.set_max_items_per_page(4);
-    assert(s.max_items_per_page() === 12, 'clamp min items per page');
-    s.set_border_width(20);
-    s.set_border_radius(80);
-    s.set_border_color_rgba('#2ec27e');
+    s.set_folder_order_position('start'); assert(s.folder_order_position() === 'start', 'folder pos start');
+    s.set_folder_order_position('invalid'); assert(s.folder_order_position() === 'alphabetical', 'folder pos fallback');
+    s.set_max_items_per_page(99); assert(s.max_items_per_page() === 48, 'clamp max items per page');
+    s.set_max_items_per_page(4); assert(s.max_items_per_page() === 12, 'clamp min items per page');
+    s.set_border_width(20); s.set_border_radius(80); s.set_border_color_rgba('#2ec27e');
     assert(s.border_width() === 8 && s.border_radius() === 36 && s.border_color_rgba() === 'rgba(46, 194, 126, 1)', 'border');
     assert(is_dark_rgba(parse_rgba('#111111')) && text_color_for_css('#ffffff') === '#000000', 'luminance');
+    assert(format_rgba(parse_rgba('#zzzzzz')) === 'rgba(255, 0, 0, 1)', 'invalid hex falls back to default red');
     assert(build_folder_dialog_css(true, 2, 24, 'rgb(255,0,0)') === 'border: 2px solid rgba(255, 0, 0, 1); border-radius: 24px;', 'css');
     assert(build_folder_dialog_css(false, 2, 24, 'rgb(255,0,0)') === 'border-radius: 24px;', 'disabled border css');
     s.reset_defaults();
@@ -208,6 +203,10 @@ async function verify_behavioral_and_gtk_suite() {
     assert(mk_child('coral-games').get_string('name') === 'Games', 'empty existing folder name repaired');
     assert(sort_all_folders(mock_fs, mock_sys, false, mk_child) && mk_child('coral-games').get_strv('apps')[0] === 'g-0.desktop', 'sort_all');
     assert(dissolve_coral_folders(mock_fs, mk_child) === 1 && children_ids.length === 0, 'dissolve_coral_folders');
+    mk_child('coral-games').set_value('excluded-apps', new GLib.Variant('as', ['g-0.desktop']));
+    children_ids = ['coral-games'];
+    assert(apply_auto_grouping_if_needed(mock_fs, mock_sys, new Set(), 12, 'overflow-only', mk_child), 'auto_group with excluded');
+    assert(!mk_child('coral-games').get_strv('apps').includes('g-0.desktop'), 'excluded-apps honored');
 
     try {
         const Gtk = (await import('gi://Gtk?version=4.0')).default, Adw = (await import('gi://Adw?version=1')).default;

@@ -21,7 +21,7 @@ jobs:
       - name: Install GNOME Shell & EGO validation tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends libglib2.0-bin gnome-shell-common gnome-shell gir1.2-adw-1 gir1.2-gtk-4.0 gjs libxml2-utils jq unzip pipx
+          sudo apt-get install -y --no-install-recommends libglib2.0-bin gnome-shell-common gnome-shell gir1.2-adw-1 gir1.2-gtk-4.0 gjs xvfb libxml2-utils jq unzip pipx
 
       - name: Validate GSettings XML schema
         run: |
@@ -29,7 +29,7 @@ jobs:
           glib-compile-schemas --strict --dry-run extension/schemas
 
       - name: Run zero-dependency GJS architectural & headless behavioral test suite
-        run: gjs -m tests/verify.js
+        run: xvfb-run -a gjs -m tests/verify.js
 
       - name: Pack EGO extension zip bundle
         run: |

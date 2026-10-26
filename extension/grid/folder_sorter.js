@@ -58,6 +58,10 @@ export function apply_auto_grouping_if_needed(
         for (let j = 0; j < active_apps.length; j += 1) {
             folder_apps_set.add(active_apps[j]);
         }
+        const excluded = Array.isArray(folders[i].excluded) ? folders[i].excluded : [];
+        for (let j = 0; j < excluded.length; j += 1) {
+            folder_apps_set.add(excluded[j]);
+        }
     }
 
     const installed = app_system.get_installed ? app_system.get_installed() : [];
@@ -126,7 +130,7 @@ export function sort_all_folders(folder_settings, app_system, reverse = false, c
         const child = open_folder_settings(folder_ids[i], child_factory);
         const current = child.get_strv('apps');
         const sorted = sort_desktop_ids_by_name(current, lookup_name, reverse);
-        if (!arrays_equal(current, sorted) && child.is_writable('apps')) {
+        if (sorted.length === current.length && !arrays_equal(current, sorted) && child.is_writable('apps')) {
             child.set_value('apps', new GLib.Variant('as', sorted));
             changed = true;
         }
