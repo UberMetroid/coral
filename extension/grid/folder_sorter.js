@@ -87,6 +87,7 @@ export function apply_auto_grouping_if_needed(
 ) {
     if (!folder_settings || !app_system) return false;
     const folders = read_existing_folders(folder_settings, child_factory);
+    const installed = app_system.get_installed ? app_system.get_installed() : [];
     const folder_apps_set = new Set();
     const folder_cats_set = new Set();
     for (let i = 0; i < folders.length; i += 1) {
@@ -95,11 +96,12 @@ export function apply_auto_grouping_if_needed(
         for (let j = 0; j < active_apps.length; j += 1) folder_apps_set.add(active_apps[j]);
         const excluded = Array.isArray(folders[i].excluded) ? folders[i].excluded : [];
         for (let j = 0; j < excluded.length; j += 1) folder_apps_set.add(excluded[j]);
-        const f_cats = Array.isArray(folders[i].categories) ? folders[i].categories : [];
+        const raw_cats = Array.isArray(folders[i].categories) ? folders[i].categories : [];
+        const f_cats = has_active_category_app(installed, raw_cats, excluded) ? raw_cats : [];
+        folders[i].categories = f_cats;
         for (let j = 0; j < f_cats.length; j += 1) folder_cats_set.add(f_cats[j]);
     }
 
-    const installed = app_system.get_installed ? app_system.get_installed() : [];
     const loose_apps = [];
     for (let i = 0; i < installed.length; i += 1) {
         const info = installed[i];

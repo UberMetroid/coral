@@ -208,9 +208,10 @@ async function verify_behavioral_and_gtk_suite() {
     mk_child('uuid-games').set_value('apps', new GLib.Variant('as', ['stale.desktop', 'g-2.desktop']));
     mk_child('ghost-docs').set_value('apps', new GLib.Variant('as', ['uninstalled.desktop']));
     mk_child('YaST').set_value('categories', new GLib.Variant('as', ['X-SuSE-YaST']));
+    children_ids = ['YaST', 'ghost-docs'];
+    assert(!apply_auto_grouping_if_needed(mock_fs, mock_sys, new Set(), 16, 'overflow-only', mk_child), 'inactive ghost no overflow');
     children_ids = ['coral-games', 'uuid-games', 'ghost-docs', 'YaST'];
-    assert(apply_auto_grouping_if_needed(mock_fs, mock_sys, new Set(), 12, 'overflow-only', mk_child), 'auto_group with excluded');
-    assert(!mk_child('coral-games').get_strv('apps').includes('g-0.desktop'), 'excluded-apps honored');
+    assert(apply_auto_grouping_if_needed(mock_fs, mock_sys, new Set(), 12, 'overflow-only', mk_child) && !mk_child('coral-games').get_strv('apps').includes('g-0.desktop'), 'excluded');
     assert(sort_all_folders(mock_fs, mock_sys, false, mk_child) && !mk_child('uuid-games').get_strv('apps').includes('stale.desktop'), 'prune stale');
     assert(!children_ids.includes('ghost-docs') && !children_ids.includes('YaST') && children_ids.includes('uuid-games'), 'ghost folders pruned');
 
