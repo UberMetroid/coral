@@ -113,6 +113,7 @@ export class GridManager {
         }, this);
         if (this._controls?._stateAdjustment) {
             this._controls._stateAdjustment.connectObject('notify::value', () => {
+                if (this._controls._stateAdjustment.gestureInProgress) return;
                 if (this._controls._stateAdjustment.value === OverviewControls.ControlsState.APP_GRID) {
                     if (this.settings.reset_page_on_open() && this._app_display) {
                         this._app_display.goToPage(0, false);

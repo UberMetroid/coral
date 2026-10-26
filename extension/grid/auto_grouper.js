@@ -62,21 +62,25 @@ export const CATEGORY_BUCKETS = Object.freeze([
         coral_id: 'coral-system',
         label: 'System',
         aliases: Object.freeze(['system', 'x-gnome-shell-system.directory', 'settings']),
-        categories: Object.freeze(['System', 'Settings', 'Monitor', 'PackageManager', 'Security', 'HardwareSettings']),
+        categories: Object.freeze([
+            'System', 'Settings', 'Monitor', 'PackageManager', 'Security', 'HardwareSettings', 'TerminalEmulator',
+        ]),
     }),
     Object.freeze({
         key: 'utilities',
         coral_id: 'coral-utilities',
         label: 'Utilities',
         aliases: Object.freeze(['utilities', 'x-gnome-shell-utilities.directory']),
-        categories: Object.freeze(['X-GNOME-Utilities', 'Archiving', 'Compression', 'FileTools', 'Calculator']),
+        categories: Object.freeze([
+            'X-GNOME-Utilities', 'Archiving', 'Compression', 'FileTools', 'Calculator', 'FileManager',
+        ]),
     }),
     Object.freeze({
         key: 'accessories',
         coral_id: 'coral-accessories',
         label: 'Accessories',
         aliases: Object.freeze(['accessories', 'utility']),
-        categories: Object.freeze(['Utility', 'Accessibility', 'Clock', 'TextEditor', 'Core']),
+        categories: Object.freeze(['Utility', 'Accessibility', 'Clock', 'TextEditor']),
     }),
 ]);
 

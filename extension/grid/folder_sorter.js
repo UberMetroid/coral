@@ -94,24 +94,37 @@ export function apply_auto_grouping_if_needed(
     for (let i = 0; i < plan.assignments.length; i += 1) {
         const a = plan.assignments[i];
         const child = open_folder_settings(a.folder_id, child_factory);
+        if (typeof child.delay === 'function') child.delay();
+        let child_dirty = false;
         const is_new_child = !next_children.includes(a.folder_id);
         if (is_new_child) {
             next_children.push(a.folder_id);
         }
         if (is_new_child || child.get_string('name').trim().length === 0) {
-            if (child.is_writable('name')) child.set_string('name', a.folder_name);
-            if (child.is_writable('translate')) child.set_boolean('translate', false);
+            if (child.is_writable('name')) {
+                child.set_string('name', a.folder_name);
+                child_dirty = true;
+            }
+            if (child.is_writable('translate')) {
+                child.set_boolean('translate', false);
+                child_dirty = true;
+            }
         }
         const existing_apps = child.get_strv('apps');
-        const merged = existing_apps.slice();
+        const is_coral_folder = a.folder_id.startsWith('coral-');
+        const merged = is_coral_folder
+            ? existing_apps.filter((id) => app_system.lookup_app(id) !== null)
+            : existing_apps.slice();
         for (let j = 0; j < a.added_app_ids.length; j += 1) {
             const app_id = a.added_app_ids[j];
             if (!merged.includes(app_id)) merged.push(app_id);
         }
         if (!arrays_equal(existing_apps, merged) && child.is_writable('apps')) {
             child.set_value('apps', new GLib.Variant('as', merged));
-            changed = true;
+            child_dirty = true;
         }
+        if (typeof child.apply === 'function') child.apply();
+        if (child_dirty) changed = true;
     }
 
     if (!arrays_equal(current_children, next_children) && folder_settings.is_writable('folder-children')) {
@@ -130,10 +143,14 @@ export function sort_all_folders(folder_settings, app_system, reverse = false, c
     };
     let changed = false;
     for (let i = 0; i < folder_ids.length; i += 1) {
-        const child = open_folder_settings(folder_ids[i], child_factory);
+        const id = folder_ids[i];
+        const child = open_folder_settings(id, child_factory);
         const current = child.get_strv('apps');
-        const sorted = sort_desktop_ids_by_name(current, lookup_name, reverse);
-        if (sorted.length === current.length && !arrays_equal(current, sorted) && child.is_writable('apps')) {
+        const base = id.startsWith('coral-') && app_system
+            ? current.filter((app_id) => app_system.lookup_app(app_id) !== null)
+            : current;
+        const sorted = sort_desktop_ids_by_name(base, lookup_name, reverse);
+        if (sorted.length === base.length && !arrays_equal(current, sorted) && child.is_writable('apps')) {
             child.set_value('apps', new GLib.Variant('as', sorted));
             changed = true;
         }
@@ -151,8 +168,10 @@ export function dissolve_coral_folders(folder_settings = null, child_factory = n
         if (typeof id === 'string' && id.startsWith('coral-')) {
             try {
                 const child = open_folder_settings(id, child_factory);
+                if (typeof child.delay === 'function') child.delay();
                 const keys = child.settings_schema ? child.settings_schema.list_keys() : ['apps', 'name', 'translate'];
                 for (let k = 0; k < keys.length; k += 1) child.reset(keys[k]);
+                if (typeof child.apply === 'function') child.apply();
             } catch (_e) { /* ignore */ }
             dissolved += 1;
         } else {

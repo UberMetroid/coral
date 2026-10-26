@@ -31,6 +31,12 @@ jobs:
       - name: Run zero-dependency GJS architectural & headless behavioral test suite
         run: xvfb-run -a gjs -m tests/verify.js
 
+      - name: Verify GNOME Shell GIR typelibs & compositor module syntax
+        run: |
+          for f in extension/*.js extension/grid/*.js extension/ui/*.js extension/ui/settings/*.js; do
+            node --check "$f"
+          done
+
       - name: Pack EGO extension zip bundle
         run: |
           mkdir -p dist

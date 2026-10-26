@@ -32,7 +32,7 @@ Derived from [Alphabetical App Grid](https://github.com/stuarthayhurst/alphabeti
 
 ## Quick Install
 
-Download `coral@ubermetroid.github.io.shell-extension.zip` from [**GitHub Releases (`v1.2.0`)**](https://github.com/UberMetroid/coral/releases/latest):
+Download `coral@ubermetroid.github.io.shell-extension.zip` from [**GitHub Releases (`v1.2.1`)**](https://github.com/UberMetroid/coral/releases/latest):
 
 ```bash
 gnome-extensions install --force coral@ubermetroid.github.io.shell-extension.zip
@@ -53,7 +53,7 @@ gnome-extensions prefs coral@ubermetroid.github.io
 | :--- | :--- |
 | **1. Grid & Auto-Groups** | **Smart Auto-Group to Prevent Overflow Page** toggle, **Auto-Group Strategy** (`Only When Needed to Stop Overflow Page` vs. `Always Group All Apps by Category`), **Target Icons Per Page** (`12–48`, default `24`), **Unpack Auto-Created Category Folders**, **Folder Placement** (`Alphabetical`, `Start of Grid`, `End of Grid`), **Sort Folder Contents Alphabetically** toggle, **Reverse Order (`Z -> A`)** toggle, **Show Pinned Favorites in App Grid** toggle, **Always Open App Grid on First Page** toggle, and **Reset to Coral Defaults**. |
 | **2. Folder Styling** | **Show App Folder Accent Border** toggle, **Accent Border Color** picker, **Quick Color Presets** (*Gruvbox Amber*, *Kelp Emerald*, *Ocean Cyan*, *Coral Red*), **Border Width** (`0–8 px`, default `2 px`), and **Border Corner Radius** (`0–36 px`, default `24 px`). |
-| **3. About & Support** | Release version (`v1.2.0`), `GPL-3.0-or-later` license & Stuart Hayhurst (`Alphabetical App Grid`) attribution, **Star Coral on GitHub**, **Tuition, Not Coffee — Help send my daughter to college**, **Project Website**, and **Report an Issue**. |
+| **3. About & Support** | Release version (`v1.2.1`), `GPL-3.0-or-later` license & Stuart Hayhurst (`Alphabetical App Grid`) attribution, **Star Coral on GitHub**, **Tuition, Not Coffee — Help send my daughter to college**, **Project Website**, and **Report an Issue**. |
 
 ---
 

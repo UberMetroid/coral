@@ -3,6 +3,7 @@
 
 import Shell from 'gi://Shell';
 import * as AppDisplay from 'resource:///org/gnome/shell/ui/appDisplay.js';
+import * as AppFavorites from 'resource:///org/gnome/shell/ui/appFavorites.js';
 import { apply_folder_dialog_style } from '../ui/folder_style.js';
 import { MAX_COMPARISON_FOLDERS, compare_grid_items } from './grid_sorter.js';
 
@@ -24,7 +25,8 @@ export function build_load_apps_override(original_load_apps, settings) {
             return app_icons;
         }
         const app_sys = Shell.AppSystem.get_default();
-        const favorites = this._appFavorites ? this._appFavorites.getFavorites() : [];
+        const fav_mgr = this._appFavorites || (typeof AppFavorites.getAppFavorites === 'function' ? AppFavorites.getAppFavorites() : null);
+        const favorites = fav_mgr && typeof fav_mgr.getFavorites === 'function' ? fav_mgr.getFavorites() : [];
         if (!Array.isArray(favorites) || favorites.length === 0) {
             return app_icons;
         }
