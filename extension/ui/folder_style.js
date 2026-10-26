@@ -20,6 +20,9 @@ export function apply_folder_dialog_style(dialog, settings) {
     if (!dialog || !settings) return;
     const view_box = dialog._viewBox || dialog.child || dialog;
     if (!view_box || typeof view_box.set_style !== 'function') return;
+    if (view_box._coral_orig_style === undefined && typeof view_box.get_style === 'function') {
+        view_box._coral_orig_style = view_box.get_style();
+    }
     const css = build_folder_dialog_css(
         settings.show_folder_border(),
         settings.border_width(),
@@ -37,8 +40,9 @@ export function clear_folder_dialog_style(dialog) {
     const view_box = dialog._viewBox || dialog.child || dialog;
     if (!view_box) return;
     if (typeof view_box.set_style === 'function') {
-        view_box.set_style(null);
+        view_box.set_style(view_box._coral_orig_style ?? null);
     }
+    delete view_box._coral_orig_style;
     if (typeof view_box.remove_style_class_name === 'function') {
         view_box.remove_style_class_name('coral-folder-dialog');
     }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Libadwaita Preferences Folder Styling and About & Support pages plus border color presets.
+// Libadwaita Preferences Folder Styling, About & Support pages, shared row builders, and presets.
 
 import Adw from 'gi://Adw';
 import Gdk from 'gi://Gdk';
@@ -15,7 +15,7 @@ export const BORDER_PRESETS = Object.freeze([
     ['Coral Red', 'rgb(255,0,0)'],
 ]);
 
-function make_switch_row(title, subtitle, active, on_toggle) {
+export function make_switch_row(title, subtitle, active, on_toggle) {
     const row = new Adw.ActionRow({ title, subtitle });
     const sw = new Gtk.Switch({ active: Boolean(active), valign: Gtk.Align.CENTER });
     sw.connect('notify::active', () => on_toggle(sw.active));
@@ -24,7 +24,7 @@ function make_switch_row(title, subtitle, active, on_toggle) {
     return [row, sw];
 }
 
-function make_spin_row(title, subtitle, value, min, max, step, on_change) {
+export function make_spin_row(title, subtitle, value, min, max, step, on_change) {
     const row = new Adw.ActionRow({ title, subtitle });
     const spin = Gtk.SpinButton.new_with_range(min, max, step);
     spin.set_value(value);
@@ -34,7 +34,7 @@ function make_spin_row(title, subtitle, value, min, max, step, on_change) {
     return [row, spin];
 }
 
-function make_combo_row(title, subtitle, items, active_idx, on_change) {
+export function make_combo_row(title, subtitle, items, active_idx, on_change) {
     const row = new Adw.ActionRow({ title, subtitle });
     const combo = new Gtk.ComboBoxText({ valign: Gtk.Align.CENTER });
     for (const item of items) combo.append_text(item);
@@ -166,7 +166,7 @@ export function build_folder_styling_page(ext_settings, settings, signals) {
     return page;
 }
 
-export function build_about_page() {
+export function build_about_page(version_name = '1.2.0') {
     const page = new Adw.PreferencesPage({
         title: 'About & Support',
         icon_name: 'help-about-symbolic',
@@ -182,8 +182,9 @@ export function build_about_page() {
         title: 'Coral Release Version',
         subtitle: 'Zero-subprocess, zero-telemetry Wayland App Grid organizer for GNOME Shell',
     });
+    const clean_ver = String(version_name || '1.2.0').replace(/^v/, '');
     ver_row.add_suffix(new Gtk.Label({
-        label: 'v1.1.1', valign: Gtk.Align.CENTER, css_classes: ['monospace'],
+        label: `v${clean_ver}`, valign: Gtk.Align.CENTER, css_classes: ['monospace'],
     }));
     header_group.add(ver_row);
 

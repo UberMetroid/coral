@@ -110,7 +110,7 @@ function verify_process_boundaries_and_invariants() {
         'Derived from Alphabetical App Grid by Stuart Hayhurst',
         '[coral] reorder-grid', 'this._injection_manager?.clear()', 'dissolve_coral_folders',
         '"45"', '"50"', '"settings-schema": "org.gnome.shell.extensions.coral"',
-        'name="auto-group-overflow"', 'name="folder-order-position"', 'v1.1.1',
+        'name="auto-group-overflow"', 'name="folder-order-position"', '1.2.0',
         'this.unload_theme()', 'load_stylesheet(file)', 'Support &amp; Community',
     ];
     for (const req of reqs) assert(combined.includes(req), `Missing invariant: ${req}`);
@@ -153,7 +153,7 @@ async function verify_behavioral_and_gtk_suite() {
     assert(s.max_items_per_page() === 24 && format_rgba(parse_rgba(s.border_color_rgba())) === 'rgba(255, 0, 0, 1)', 'rst');
     assert(alphabetical_compare('Alacritty', 'Firefox', false) < 0 && alphabetical_compare('Alacritty', 'Firefox', true) > 0, 'cmp');
     const folder_item = { id: 'Games', name: 'Games' }, app_item = { id: 'alacritty.desktop', name: 'Alacritty' };
-    assert(compare_grid_items(folder_item, app_item, 'start', ['Games'], false) < 0, 'folder at start');
+    assert(compare_grid_items(folder_item, app_item, 'start', new Set(['Games']), false) < 0, 'folder at start');
     assert(compare_grid_items(folder_item, app_item, 'end', ['Games'], false) > 0, 'folder at end');
     assert(compare_grid_items(folder_item, app_item, 'alphabetical', ['Games'], false) > 0, 'folder alphabetical');
     const sorted_ids = sort_desktop_ids_by_name(['z.desktop', 'a.desktop'], (id) => (id === 'a.desktop' ? 'Alpha' : 'Zeta'));

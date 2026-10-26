@@ -17,15 +17,8 @@ export default class CoralExtension extends Extension {
 
     disable() {
         if (this.manager !== null) {
-            this.unload_theme();
             this.manager.destroy();
             this.manager = null;
-        }
-    }
-
-    unload_theme() {
-        if (this.manager !== null) {
-            this.manager.unload_theme();
         }
     }
 }

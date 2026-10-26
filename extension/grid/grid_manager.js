@@ -35,10 +35,15 @@ export class GridManager {
         this._reorder_timeout_id = 0;
         this._current_style = null;
 
-        this.load_theme();
-        this._patch_shell();
-        this._connect_listeners();
-        this.reorder_grid();
+        try {
+            this.load_theme();
+            this._patch_shell();
+            this._connect_listeners();
+            this.reorder_grid();
+        } catch (err) {
+            this.destroy();
+            throw err;
+        }
     }
 
     load_theme() {
@@ -133,41 +138,13 @@ export class GridManager {
         }
     }
 
-    _schedule_reorder_timer() {
-        if (this._reorder_timeout_id !== 0) {
-            GLib.Source.remove(this._reorder_timeout_id);
-            this._reorder_timeout_id = 0;
-        }
-        this._reorder_timeout_id = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 100, () => {
-            this._reorder_timeout_id = 0;
-            try {
-                this._app_display?._redisplay();
-                this._sync_folder_dialogs_style(false);
-            } catch (err) {
-                console.error(err);
-            }
-            this._currently_updating = false;
-            if (this._reorder_pending) {
-                this._reorder_pending = false;
-                this.reorder_grid();
-            }
-            return GLib.SOURCE_REMOVE;
-        });
-        GLib.Source.set_name_by_id(this._reorder_timeout_id, '[coral] reorder-grid');
-    }
-
-    reorder_grid() {
-        if (!this._app_display) return;
-        if (this._currently_updating || this._app_display._pageManager?._updatingPages) {
+    _run_reorder_pass() {
+        if (!this._app_display || !this.settings) return;
+        if (this._app_display._pageManager?._updatingPages) {
             this._reorder_pending = true;
-            if (!this._currently_updating && this._reorder_timeout_id === 0) {
-                this._schedule_reorder_timer();
-            }
             return;
         }
         this._currently_updating = true;
-        this._reorder_pending = false;
-
         try {
             if (this.settings.auto_group_overflow()) {
                 const fav_set = this.settings.show_favorite_apps()
@@ -185,10 +162,33 @@ export class GridManager {
             if (this.settings.sort_folder_contents()) {
                 sort_all_folders(this._folder_settings, this._app_system, this.settings.reverse_order());
             }
+            this._app_display._redisplay();
+            this._sync_folder_dialogs_style(false);
         } catch (err) {
             console.error(err);
+        } finally {
+            this._currently_updating = false;
         }
-        this._schedule_reorder_timer();
+    }
+
+    reorder_grid() {
+        if (!this._app_display) return;
+        if (this._currently_updating) return;
+        if (this._reorder_timeout_id !== 0) {
+            GLib.Source.remove(this._reorder_timeout_id);
+            this._reorder_timeout_id = 0;
+        }
+        this._reorder_timeout_id = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 100, () => {
+            this._reorder_timeout_id = 0;
+            this._reorder_pending = false;
+            this._run_reorder_pass();
+            if (this._reorder_pending) {
+                this._reorder_pending = false;
+                this.reorder_grid();
+            }
+            return GLib.SOURCE_REMOVE;
+        });
+        GLib.Source.set_name_by_id(this._reorder_timeout_id, '[coral] reorder-grid');
     }
 
     destroy() {

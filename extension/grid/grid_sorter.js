@@ -4,10 +4,12 @@
 export const MAX_GRID_APPS = 512;
 export const MAX_COMPARISON_FOLDERS = 64;
 
+const COLLATOR = new Intl.Collator(undefined, { sensitivity: 'base', numeric: true });
+
 export function alphabetical_compare(name_a, name_b, reverse = false) {
-    const a = String(name_a ?? '').toLowerCase();
-    const b = String(name_b ?? '').toLowerCase();
-    const cmp = a.localeCompare(b);
+    const a = String(name_a ?? '');
+    const b = String(name_b ?? '');
+    const cmp = COLLATOR.compare(a, b);
     return reverse ? -cmp : cmp;
 }
 
@@ -28,26 +30,36 @@ export function resolve_item_name(item) {
 export function compare_grid_items(item_a, item_b, folder_position = 'alphabetical', folder_ids = [], reverse = false) {
     const name_a = resolve_item_name(item_a);
     const name_b = resolve_item_name(item_b);
-    if (folder_position === 'alphabetical' || !Array.isArray(folder_ids) || folder_ids.length === 0) {
+    const is_set = folder_ids instanceof Set;
+    const is_arr = Array.isArray(folder_ids);
+    if (folder_position === 'alphabetical' || (!is_set && !is_arr)) {
+        return alphabetical_compare(name_a, name_b, reverse);
+    }
+    if ((is_set && folder_ids.size === 0) || (is_arr && folder_ids.length === 0)) {
         return alphabetical_compare(name_a, name_b, reverse);
     }
 
     const id_a = resolve_item_id(item_a);
     const id_b = resolve_item_id(item_b);
-    const bounded_folders = folder_ids.slice(0, MAX_COMPARISON_FOLDERS);
-    const is_folder_a = bounded_folders.includes(id_a);
-    const is_folder_b = bounded_folders.includes(id_b);
+    let is_folder_a = false;
+    let is_folder_b = false;
+    if (is_set) {
+        is_folder_a = folder_ids.has(id_a);
+        is_folder_b = folder_ids.has(id_b);
+    } else {
+        const limit = Math.min(folder_ids.length, MAX_COMPARISON_FOLDERS);
+        for (let i = 0; i < limit; i += 1) {
+            if (folder_ids[i] === id_a) is_folder_a = true;
+            if (folder_ids[i] === id_b) is_folder_b = true;
+            if (is_folder_a && is_folder_b) break;
+        }
+    }
 
     if (is_folder_a === is_folder_b) {
         return alphabetical_compare(name_a, name_b, reverse);
     }
-
-    if (folder_position === 'start') {
-        return is_folder_a ? -1 : 1;
-    }
-    if (folder_position === 'end') {
-        return is_folder_a ? 1 : -1;
-    }
+    if (folder_position === 'start') return is_folder_a ? -1 : 1;
+    if (folder_position === 'end') return is_folder_a ? 1 : -1;
     return alphabetical_compare(name_a, name_b, reverse);
 }
 
@@ -69,8 +81,7 @@ export function sort_desktop_ids_by_name(desktop_ids, lookup_name_fn, reverse = 
     }
     pairs.sort((a, b) => {
         const cmp = alphabetical_compare(a.name, b.name, reverse);
-        if (cmp !== 0) return cmp;
-        return alphabetical_compare(a.id, b.id, reverse);
+        return cmp !== 0 ? cmp : alphabetical_compare(a.id, b.id, reverse);
     });
     return pairs.map((entry) => entry.id);
 }
