@@ -81,7 +81,7 @@ export class GridManager {
         this._injection_manager.overrideMethod(
             AppDisplay.AppDisplay.prototype,
             '_redisplay',
-            () => build_redisplay_override(settings),
+            () => build_redisplay_override(settings, folder_settings),
         );
         this._injection_manager.overrideMethod(
             AppDisplay.AppDisplay.prototype,
@@ -99,9 +99,12 @@ export class GridManager {
         Main.overview.connectObject('item-drag-end', () => this.reorder_grid(), this);
         this._folder_settings.connectObject('changed::folder-children', () => this.reorder_grid(), this);
         this._app_system.connectObject('installed-changed', () => this.reorder_grid(), this);
-        this.ext_settings.connectObject('changed', () => {
+        const style_keys = new Set([
+            'show-folder-border', 'border-width', 'border-radius', 'border-color-rgba',
+        ]);
+        this.ext_settings.connectObject('changed', (_s, key) => {
             this._sync_folder_dialogs_style();
-            this.reorder_grid();
+            if (!style_keys.has(key)) this.reorder_grid();
         }, this);
         if (this._controls?._stateAdjustment) {
             this._controls._stateAdjustment.connectObject('notify::value', () => {
@@ -130,10 +133,36 @@ export class GridManager {
         }
     }
 
+    _schedule_reorder_timer() {
+        if (this._reorder_timeout_id !== 0) {
+            GLib.Source.remove(this._reorder_timeout_id);
+            this._reorder_timeout_id = 0;
+        }
+        this._reorder_timeout_id = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 100, () => {
+            this._reorder_timeout_id = 0;
+            try {
+                this._app_display?._redisplay();
+                this._sync_folder_dialogs_style(false);
+            } catch (err) {
+                console.error(err);
+            }
+            this._currently_updating = false;
+            if (this._reorder_pending) {
+                this._reorder_pending = false;
+                this.reorder_grid();
+            }
+            return GLib.SOURCE_REMOVE;
+        });
+        GLib.Source.set_name_by_id(this._reorder_timeout_id, '[coral] reorder-grid');
+    }
+
     reorder_grid() {
         if (!this._app_display) return;
         if (this._currently_updating || this._app_display._pageManager?._updatingPages) {
             this._reorder_pending = true;
+            if (!this._currently_updating && this._reorder_timeout_id === 0) {
+                this._schedule_reorder_timer();
+            }
             return;
         }
         this._currently_updating = true;
@@ -159,27 +188,7 @@ export class GridManager {
         } catch (err) {
             console.error(err);
         }
-
-        if (this._reorder_timeout_id !== 0) {
-            GLib.Source.remove(this._reorder_timeout_id);
-            this._reorder_timeout_id = 0;
-        }
-        this._reorder_timeout_id = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 100, () => {
-            this._reorder_timeout_id = 0;
-            try {
-                this._app_display?._redisplay();
-                this._sync_folder_dialogs_style(false);
-            } catch (err) {
-                console.error(err);
-            }
-            this._currently_updating = false;
-            if (this._reorder_pending) {
-                this._reorder_pending = false;
-                this.reorder_grid();
-            }
-            return GLib.SOURCE_REMOVE;
-        });
-        GLib.Source.set_name_by_id(this._reorder_timeout_id, '[coral] reorder-grid');
+        this._schedule_reorder_timer();
     }
 
     destroy() {

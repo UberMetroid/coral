@@ -3,7 +3,7 @@
 
 import GLib from 'gi://GLib';
 import Gio from 'gi://Gio';
-import { MAX_FOLDERS, plan_overflow_grouping } from './auto_grouper.js';
+import { MAX_FOLDERS, parse_desktop_categories, plan_overflow_grouping } from './auto_grouper.js';
 import { sort_desktop_ids_by_name } from './grid_sorter.js';
 
 export const APP_FOLDERS_SCHEMA = 'org.gnome.desktop.app-folders';
@@ -35,7 +35,8 @@ export function read_existing_folders(folder_settings, child_factory = null) {
             const name = child.get_string('name');
             const apps = child.get_strv('apps');
             const excluded = child.get_strv('excluded-apps');
-            result.push({ id, name, apps, excluded, settings: child });
+            const categories = child.settings_schema?.has_key('categories') ? child.get_strv('categories') : [];
+            result.push({ id, name, apps, excluded, categories, settings: child });
         } catch (_e) { /* ignore malformed relocatable folder */ }
     }
     return result;
@@ -52,16 +53,15 @@ export function apply_auto_grouping_if_needed(
     if (!folder_settings || !app_system) return false;
     const folders = read_existing_folders(folder_settings, child_factory);
     const folder_apps_set = new Set();
+    const folder_cats_set = new Set();
     for (let i = 0; i < folders.length; i += 1) {
         const active_apps = folders[i].apps.filter((id) => app_system.lookup_app(id) !== null);
         folders[i].apps = active_apps;
-        for (let j = 0; j < active_apps.length; j += 1) {
-            folder_apps_set.add(active_apps[j]);
-        }
+        for (let j = 0; j < active_apps.length; j += 1) folder_apps_set.add(active_apps[j]);
         const excluded = Array.isArray(folders[i].excluded) ? folders[i].excluded : [];
-        for (let j = 0; j < excluded.length; j += 1) {
-            folder_apps_set.add(excluded[j]);
-        }
+        for (let j = 0; j < excluded.length; j += 1) folder_apps_set.add(excluded[j]);
+        const f_cats = Array.isArray(folders[i].categories) ? folders[i].categories : [];
+        for (let j = 0; j < f_cats.length; j += 1) folder_cats_set.add(f_cats[j]);
     }
 
     const installed = app_system.get_installed ? app_system.get_installed() : [];
@@ -76,8 +76,11 @@ export function apply_auto_grouping_if_needed(
         }
         if (!id || folder_apps_set.has(id)) continue;
         if (favorite_ids_set && favorite_ids_set.has(id)) continue;
-        if (typeof info.should_show === 'function' && !info.should_show()) continue;
-        const categories = typeof info.get_categories === 'function' ? (info.get_categories() || '') : '';
+        const app_info = typeof info.get_app_info === 'function' ? info.get_app_info() : info;
+        if (typeof app_info?.should_show === 'function' && !app_info.should_show()) continue;
+        const categories = typeof app_info?.get_categories === 'function' ? (app_info.get_categories() || '') : '';
+        const tokens = parse_desktop_categories(categories);
+        if (tokens.some((t) => folder_cats_set.has(t))) continue;
         loose_apps.push({ id, name: info.get_name() || id, categories });
     }
 

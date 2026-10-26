@@ -137,7 +137,9 @@ export function plan_overflow_grouping(
         seen_app_ids.add(app.id);
         unique_apps.push(app);
     }
-    const active_folders = safe_folders.filter((f) => Array.isArray(f?.apps) && f.apps.length > 0);
+    const active_folders = safe_folders.filter(
+        (f) => (Array.isArray(f?.apps) && f.apps.length > 0) || (Array.isArray(f?.categories) && f.categories.length > 0),
+    );
     let top_level_count = unique_apps.length + active_folders.length;
 
     if (mode !== 'all-categories' && top_level_count <= capacity) {
@@ -162,7 +164,12 @@ export function plan_overflow_grouping(
     const candidates = [];
     for (const { bucket, app_ids } of grouped_by_key.values()) {
         const existing = find_existing_folder_for_bucket(bucket, safe_folders);
-        const existing_has_apps = Boolean(existing && Array.isArray(existing.apps) && existing.apps.length > 0);
+        const existing_has_apps = Boolean(
+            existing && (
+                (Array.isArray(existing.apps) && existing.apps.length > 0) ||
+                (Array.isArray(existing.categories) && existing.categories.length > 0)
+            ),
+        );
         const saved_slots = existing_has_apps ? app_ids.length : app_ids.length - 1;
         if (mode === 'all-categories') {
             if (existing_has_apps ? app_ids.length >= 1 : app_ids.length >= 2) {

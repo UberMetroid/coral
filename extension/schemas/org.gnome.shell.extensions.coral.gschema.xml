@@ -22,6 +22,7 @@
       <description>Strategy for automatic category folder grouping: overflow-only or all-categories</description>
     </key>
     <key name="max-items-per-page" type="i">
+      <range min="12" max="48"/>
       <default>24</default>
       <summary>Target icons per page</summary>
       <description>Target single-page icon capacity before overflow auto-grouping triggers (12 to 48)</description>
@@ -47,11 +48,13 @@
       <description>Draw a high-contrast accent border around open App Folder dialogs matching Kelp and Reef</description>
     </key>
     <key name="border-width" type="i">
+      <range min="0" max="8"/>
       <default>2</default>
       <summary>App Folder popup border width in pixels</summary>
       <description>Thickness of the App Folder dialog accent border ring (0 to 8 px)</description>
     </key>
     <key name="border-radius" type="i">
+      <range min="0" max="36"/>
       <default>24</default>
       <summary>App Folder popup corner radius in pixels</summary>
       <description>Corner rounding of the App Folder dialog accent border ring (0 to 36 px)</description>

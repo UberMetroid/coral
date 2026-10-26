@@ -10,7 +10,9 @@ export function build_compare_items_override(settings, folder_settings) {
     return function coral_compare_items(item_a, item_b) {
         const folder_pos = settings.folder_order_position();
         const reverse = settings.reverse_order();
-        const folder_ids = folder_settings ? folder_settings.get_strv('folder-children') : [];
+        const folder_ids = Array.isArray(this._coral_folder_ids)
+            ? this._coral_folder_ids
+            : (folder_settings ? folder_settings.get_strv('folder-children') : []);
         return compare_grid_items(item_a, item_b, folder_pos, folder_ids, reverse);
     };
 }
@@ -63,8 +65,9 @@ export function build_load_apps_override(original_load_apps, settings) {
     };
 }
 
-export function build_redisplay_override(settings) {
+export function build_redisplay_override(settings, folder_settings = null) {
     return function coral_redisplay() {
+        this._coral_folder_ids = folder_settings ? folder_settings.get_strv('folder-children') : [];
         if (Array.isArray(this._folderIcons)) {
             for (let i = 0; i < this._folderIcons.length; i += 1) {
                 const f_icon = this._folderIcons[i];

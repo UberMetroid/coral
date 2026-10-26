@@ -110,7 +110,7 @@ function verify_process_boundaries_and_invariants() {
         'Derived from Alphabetical App Grid by Stuart Hayhurst',
         '[coral] reorder-grid', 'this._injection_manager?.clear()', 'dissolve_coral_folders',
         '"45"', '"50"', '"settings-schema": "org.gnome.shell.extensions.coral"',
-        'name="auto-group-overflow"', 'name="folder-order-position"', 'v1.1.0',
+        'name="auto-group-overflow"', 'name="folder-order-position"', 'v1.1.1',
         'this.unload_theme()', 'load_stylesheet(file)', 'Support &amp; Community',
     ];
     for (const req of reqs) assert(combined.includes(req), `Missing invariant: ${req}`);
@@ -196,7 +196,8 @@ async function verify_behavioral_and_gtk_suite() {
     const mock_sys = {
         lookup_app: (id) => ({ get_name: () => id }),
         get_installed: () => Array.from({ length: 15 }, (_, i) => ({
-            get_id: () => `g-${14 - i}.desktop`, get_name: () => `Game ${14 - i}`, should_show: () => true, get_categories: () => 'Game;',
+            get_id: () => `g-${14 - i}.desktop`, get_name: () => `Game ${14 - i}`,
+            get_app_info: () => ({ should_show: () => true, get_categories: () => 'Game;' }),
         })),
     };
     assert(apply_auto_grouping_if_needed(mock_fs, mock_sys, new Set(), 12, 'overflow-only', mk_child), 'auto_group');

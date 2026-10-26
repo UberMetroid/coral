@@ -36,6 +36,12 @@ export class ExtensionSettings {
         return Boolean(this.gio && this.gio.settings_schema?.has_key(key));
     }
 
+    _set_clamped_int(key, v, min, max, fallback) {
+        if (!this._has(key)) return;
+        const clamped = clamp_int(v, min, max, fallback);
+        if (this.gio.get_int(key) !== clamped) this.gio.set_int(key, clamped);
+    }
+
     folder_order_position() {
         const raw = this._has('folder-order-position')
             ? this.gio.get_string('folder-order-position')
@@ -90,8 +96,7 @@ export class ExtensionSettings {
     }
 
     set_max_items_per_page(v) {
-        if (!this._has('max-items-per-page')) return;
-        this.gio.set_int('max-items-per-page', clamp_int(v, 12, 48, DEFAULTS.max_items_per_page));
+        this._set_clamped_int('max-items-per-page', v, 12, 48, DEFAULTS.max_items_per_page);
     }
 
     reverse_order() {
@@ -140,7 +145,7 @@ export class ExtensionSettings {
     }
 
     set_border_width(v) {
-        if (this._has('border-width')) this.gio.set_int('border-width', clamp_int(v, 0, 8, DEFAULTS.border_width));
+        this._set_clamped_int('border-width', v, 0, 8, DEFAULTS.border_width);
     }
 
     border_radius() {
@@ -149,7 +154,7 @@ export class ExtensionSettings {
     }
 
     set_border_radius(v) {
-        if (this._has('border-radius')) this.gio.set_int('border-radius', clamp_int(v, 0, 36, DEFAULTS.border_radius));
+        this._set_clamped_int('border-radius', v, 0, 36, DEFAULTS.border_radius);
     }
 
     border_color_rgba() {

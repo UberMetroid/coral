@@ -5,7 +5,7 @@
     "url": "https://github.com/UberMetroid/coral",
     "settings-schema": "org.gnome.shell.extensions.coral",
     "gettext-domain": "coral@ubermetroid.github.io",
-    "version-name": "1.1.0",
+    "version-name": "1.1.1",
     "shell-version": [
         "45",
         "46",
