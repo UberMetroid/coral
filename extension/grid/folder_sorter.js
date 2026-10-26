@@ -23,6 +23,15 @@ function arrays_equal(a, b) {
     return true;
 }
 
+function read_folder_cats(child) {
+    try {
+        if (!child.settings_schema || child.settings_schema.has_key('categories')) {
+            return child.get_strv('categories');
+        }
+    } catch (_e) { /* ignore */ }
+    return [];
+}
+
 export function read_existing_folders(folder_settings, child_factory = null) {
     if (!folder_settings) return [];
     const ids = folder_settings.get_strv('folder-children').slice(0, MAX_FOLDERS);
@@ -35,11 +44,37 @@ export function read_existing_folders(folder_settings, child_factory = null) {
             const name = child.get_string('name');
             const apps = child.get_strv('apps');
             const excluded = child.get_strv('excluded-apps');
-            const categories = child.settings_schema?.has_key('categories') ? child.get_strv('categories') : [];
+            const categories = read_folder_cats(child);
             result.push({ id, name, apps, excluded, categories, settings: child });
         } catch (_e) { /* ignore malformed relocatable folder */ }
     }
     return result;
+}
+
+function has_active_category_app(installed, cats, excluded) {
+    if (!Array.isArray(cats) || cats.length === 0) return false;
+    const cat_set = new Set(cats);
+    const excl_set = new Set(Array.isArray(excluded) ? excluded : []);
+    for (let i = 0; i < installed.length; i += 1) {
+        const info = installed[i];
+        let id = '';
+        try { id = info.get_id(); } catch (_e) { continue; }
+        if (!id || excl_set.has(id)) continue;
+        const app_info = typeof info?.get_app_info === 'function' ? info.get_app_info() : info;
+        if (typeof app_info?.should_show === 'function' && !app_info.should_show()) continue;
+        const raw = typeof app_info?.get_categories === 'function' ? (app_info.get_categories() || '') : '';
+        if (parse_desktop_categories(raw).some((t) => cat_set.has(t))) return true;
+    }
+    return false;
+}
+
+function reset_folder_keys(child) {
+    try {
+        if (typeof child.delay === 'function') child.delay();
+        const keys = child.settings_schema ? child.settings_schema.list_keys() : ['apps', 'name', 'translate'];
+        for (let k = 0; k < keys.length; k += 1) child.reset(keys[k]);
+        if (typeof child.apply === 'function') child.apply();
+    } catch (_e) { /* ignore */ }
 }
 
 export function apply_auto_grouping_if_needed(
@@ -111,10 +146,7 @@ export function apply_auto_grouping_if_needed(
             }
         }
         const existing_apps = child.get_strv('apps');
-        const is_coral_folder = a.folder_id.startsWith('coral-');
-        const merged = is_coral_folder
-            ? existing_apps.filter((id) => app_system.lookup_app(id) !== null)
-            : existing_apps.slice();
+        const merged = existing_apps.filter((id) => app_system.lookup_app(id) !== null);
         for (let j = 0; j < a.added_app_ids.length; j += 1) {
             const app_id = a.added_app_ids[j];
             if (!merged.includes(app_id)) merged.push(app_id);
@@ -136,24 +168,40 @@ export function apply_auto_grouping_if_needed(
 
 export function sort_all_folders(folder_settings, app_system, reverse = false, child_factory = null) {
     if (!folder_settings) return false;
-    const folder_ids = folder_settings.get_strv('folder-children').slice(0, MAX_FOLDERS);
+    const raw_children = folder_settings.get_strv('folder-children');
+    const folder_ids = raw_children.slice(0, MAX_FOLDERS);
+    const installed = app_system?.get_installed ? app_system.get_installed() : [];
     const lookup_name = (id) => {
         const app = app_system ? app_system.lookup_app(id) : null;
         return app ? app.get_name() : id;
     };
+    const kept_children = [];
     let changed = false;
     for (let i = 0; i < folder_ids.length; i += 1) {
         const id = folder_ids[i];
         const child = open_folder_settings(id, child_factory);
         const current = child.get_strv('apps');
-        const base = id.startsWith('coral-') && app_system
+        const base = app_system
             ? current.filter((app_id) => app_system.lookup_app(app_id) !== null)
             : current;
+        const cats = read_folder_cats(child);
+        const excluded = child.get_strv('excluded-apps');
+        if (app_system && base.length === 0 && !has_active_category_app(installed, cats, excluded)) {
+            reset_folder_keys(child);
+            changed = true;
+            continue;
+        }
+        kept_children.push(id);
         const sorted = sort_desktop_ids_by_name(base, lookup_name, reverse);
         if (sorted.length === base.length && !arrays_equal(current, sorted) && child.is_writable('apps')) {
             child.set_value('apps', new GLib.Variant('as', sorted));
             changed = true;
         }
+    }
+    for (let i = MAX_FOLDERS; i < raw_children.length; i += 1) kept_children.push(raw_children[i]);
+    if (!arrays_equal(raw_children, kept_children) && folder_settings.is_writable('folder-children')) {
+        folder_settings.set_strv('folder-children', kept_children);
+        changed = true;
     }
     return changed;
 }
@@ -167,11 +215,7 @@ export function dissolve_coral_folders(folder_settings = null, child_factory = n
         const id = current[i];
         if (typeof id === 'string' && id.startsWith('coral-')) {
             try {
-                const child = open_folder_settings(id, child_factory);
-                if (typeof child.delay === 'function') child.delay();
-                const keys = child.settings_schema ? child.settings_schema.list_keys() : ['apps', 'name', 'translate'];
-                for (let k = 0; k < keys.length; k += 1) child.reset(keys[k]);
-                if (typeof child.apply === 'function') child.apply();
+                reset_folder_keys(open_folder_settings(id, child_factory));
             } catch (_e) { /* ignore */ }
             dissolved += 1;
         } else {

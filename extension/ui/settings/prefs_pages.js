@@ -166,7 +166,7 @@ export function build_folder_styling_page(ext_settings, settings, signals) {
     return page;
 }
 
-export function build_about_page(version_name = '1.2.1') {
+export function build_about_page(version_name = '1.2.2') {
     const page = new Adw.PreferencesPage({
         title: 'About & Support',
         icon_name: 'help-about-symbolic',
@@ -182,7 +182,7 @@ export function build_about_page(version_name = '1.2.1') {
         title: 'Coral Release Version',
         subtitle: 'Zero-subprocess, zero-telemetry Wayland App Grid organizer for GNOME Shell',
     });
-    const clean_ver = String(version_name || '1.2.1').replace(/^v/, '');
+    const clean_ver = String(version_name || '1.2.2').replace(/^v/, '');
     ver_row.add_suffix(new Gtk.Label({
         label: `v${clean_ver}`, valign: Gtk.Align.CENTER, css_classes: ['monospace'],
     }));

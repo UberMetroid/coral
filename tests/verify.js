@@ -110,7 +110,7 @@ function verify_process_boundaries_and_invariants() {
         'Derived from Alphabetical App Grid by Stuart Hayhurst',
         '[coral] reorder-grid', 'this._injection_manager?.clear()', 'dissolve_coral_folders',
         '"45"', '"50"', '"settings-schema": "org.gnome.shell.extensions.coral"',
-        'name="auto-group-overflow"', 'name="folder-order-position"', '1.2.1',
+        'name="auto-group-overflow"', 'name="folder-order-position"', '1.2.2',
         'this.unload_theme()', 'load_stylesheet(file)', 'Support &amp; Community',
     ];
     for (const req of reqs) assert(combined.includes(req), `Missing invariant: ${req}`);
@@ -182,7 +182,7 @@ async function verify_behavioral_and_gtk_suite() {
 
     const mem = new Map(), mk_child = (id) => {
         if (!mem.has(id)) {
-            const st = { name: '', translate: false, apps: [], 'excluded-apps': [] };
+            const st = { name: '', translate: false, apps: [], 'excluded-apps': [], categories: [] };
             mem.set(id, {
                 get_string: (k) => st[k] || '', get_strv: (k) => (st[k] || []).slice(), is_writable: () => true,
                 set_string: (k, v) => { st[k] = v; }, set_boolean: (k, v) => { st[k] = v; },
@@ -194,7 +194,7 @@ async function verify_behavioral_and_gtk_suite() {
     let children_ids = ['coral-games'];
     const mock_fs = { get_strv: () => children_ids.slice(), is_writable: () => true, set_strv: (_k, v) => { children_ids = v.slice(); } };
     const mock_sys = {
-        lookup_app: (id) => ({ get_name: () => id }),
+        lookup_app: (id) => (id.startsWith('g-') ? { get_name: () => id } : null),
         get_installed: () => Array.from({ length: 15 }, (_, i) => ({
             get_id: () => `g-${14 - i}.desktop`, get_name: () => `Game ${14 - i}`,
             get_app_info: () => ({ should_show: () => true, get_categories: () => 'Game;' }),
@@ -205,25 +205,28 @@ async function verify_behavioral_and_gtk_suite() {
     assert(sort_all_folders(mock_fs, mock_sys, false, mk_child) && mk_child('coral-games').get_strv('apps')[0] === 'g-0.desktop', 'sort_all');
     assert(dissolve_coral_folders(mock_fs, mk_child) === 1 && children_ids.length === 0, 'dissolve_coral_folders');
     mk_child('coral-games').set_value('excluded-apps', new GLib.Variant('as', ['g-0.desktop']));
-    children_ids = ['coral-games'];
+    mk_child('uuid-games').set_value('apps', new GLib.Variant('as', ['stale.desktop', 'g-2.desktop']));
+    mk_child('ghost-docs').set_value('apps', new GLib.Variant('as', ['uninstalled.desktop']));
+    mk_child('YaST').set_value('categories', new GLib.Variant('as', ['X-SuSE-YaST']));
+    children_ids = ['coral-games', 'uuid-games', 'ghost-docs', 'YaST'];
     assert(apply_auto_grouping_if_needed(mock_fs, mock_sys, new Set(), 12, 'overflow-only', mk_child), 'auto_group with excluded');
     assert(!mk_child('coral-games').get_strv('apps').includes('g-0.desktop'), 'excluded-apps honored');
+    assert(sort_all_folders(mock_fs, mock_sys, false, mk_child) && !mk_child('uuid-games').get_strv('apps').includes('stale.desktop'), 'prune stale');
+    assert(!children_ids.includes('ghost-docs') && !children_ids.includes('YaST') && children_ids.includes('uuid-games'), 'ghost folders pruned');
 
     try {
         const Gtk = (await import('gi://Gtk?version=4.0')).default, Adw = (await import('gi://Adw?version=1')).default;
         if (Gtk.init_check()) {
             Adw.init();
-            const signals = [];
-            const page_f = build_folder_styling_page(ext_settings, s, signals), page_a = build_about_page();
+            const signals = [], page_f = build_folder_styling_page(ext_settings, s, signals), page_a = build_about_page();
             assert(page_f.get_title() === 'Folder Styling' && page_a.get_title() === 'About & Support', 'GTK4 pages');
             let root_to_walk = [page_f, page_a];
             const gres = '/usr/share/gnome-shell/org.gnome.Shell.Extensions.src.gresource';
             if (Gio.File.new_for_path(gres).query_exists(null)) {
                 Gio.resources_register(Gio.Resource.load(gres));
                 const { default: CoralPreferences } = await import('../extension/prefs.js');
-                const prefs = Object.create(CoralPreferences.prototype);
+                const prefs = Object.create(CoralPreferences.prototype), win = new Adw.PreferencesWindow();
                 prefs.getSettings = () => ext_settings;
-                const win = new Adw.PreferencesWindow();
                 prefs.fillPreferencesWindow(win);
                 root_to_walk = [win];
             }
@@ -239,9 +242,7 @@ async function verify_behavioral_and_gtk_suite() {
             for (const r of root_to_walk) walk_labels(r);
             for (const [obj, sig] of signals) obj.disconnect(sig);
         }
-    } catch (e) {
-        if (String(e).includes('Verification failed')) throw e;
-    }
+    } catch (e) { if (String(e).includes('Verification failed')) throw e; }
     const comp = Gio.File.new_for_path(GLib.build_filenamev([tmp_dir, 'gschemas.compiled']));
     for (const f of [dst_xml, comp, Gio.File.new_for_path(tmp_dir)]) f.delete(null);
 }
