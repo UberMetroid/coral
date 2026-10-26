@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coral — Alphabetical App Grid & Smart Auto-Folder Organizer for GNOME 45–50</title>
+  <meta name="description" content="Wayland-native alphabetical application grid and smart auto-folder organizer for GNOME Shell 45–50 that prevents overflow pages by grouping apps into labeled category folders.">
+  <style>
+    :root {
+      --bg: #0b0d10;
+      --surface: #12161c;
+      --surface-alt: #181d25;
+      --border: #262e3b;
+      --coral: #ff4d4d;
+      --shoal: #5bc8af;
+      --reef: #6ad7e1;
+      --kelp: #2ee59d;
+      --text: #eef2f6;
+      --muted: #9aa5b4;
+      --mono: ui-monospace, "JetBrains Mono", "Fira Code", SFMono-Regular, Menlo, Consolas, monospace;
+      --sans: system-ui, -apple-system, BlinkMacSystemFont, "Inter", "Cantarell", sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--coral); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .container { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+    header {
+      border-bottom: 1px solid var(--border);
+      background: rgba(11, 13, 16, 0.88);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1.15rem;
+      color: var(--text);
+    }
+    .brand-badge {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      color: var(--coral);
+    }
+    .nav-links { display: flex; gap: 20px; font-size: 0.92rem; }
+    .nav-links a { color: var(--muted); }
+    .nav-links a:hover { color: var(--text); text-decoration: none; }
+    .hero { padding: 72px 0 56px; text-align: center; }
+    .eyebrow {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: var(--coral);
+      background: rgba(255, 77, 77, 0.1);
+      border: 1px solid rgba(255, 77, 77, 0.3);
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 20px;
+    }
+    h1 {
+      font-size: clamp(2.2rem, 5vw, 3.4rem);
+      line-height: 1.12;
+      letter-spacing: -0.02em;
+      max-width: 840px;
+      margin: 0 auto 18px;
+    }
+    .subtitle {
+      color: var(--muted);
+      font-size: 1.12rem;
+      max-width: 760px;
+      margin: 0 auto 32px;
+    }
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 14px;
+      margin-bottom: 48px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 22px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      transition: transform 0.12s ease, border-color 0.12s ease;
+    }
+    .btn:hover { transform: translateY(-1px); border-color: var(--muted); text-decoration: none; }
+    .btn-primary {
+      background: var(--coral);
+      color: #160404;
+      border-color: var(--coral);
+    }
+    .desktop-frame {
+      background: #07090b;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+      text-align: left;
+      position: relative;
+      padding: 20px;
+    }
+    .folder-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+    }
+    .folder-pill {
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: var(--surface-alt);
+      border: 2px solid var(--coral);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      color: var(--text);
+    }
+    section { padding: 56px 0; border-top: 1px solid var(--border); }
+    h2 { font-size: 1.8rem; margin-bottom: 12px; }
+    .section-lead { color: var(--muted); margin-bottom: 28px; }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .card h3 { font-size: 1.15rem; margin-bottom: 8px; color: var(--text); }
+    .card p { color: var(--muted); font-size: 0.95rem; }
+    pre {
+      background: #07090b;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      overflow-x: auto;
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      color: #d7e0ea;
+      margin-top: 12px;
+    }
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 36px 0;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <div class="brand">
+        <span>🪸 Coral</span>
+        <span class="brand-badge">v1.0.0 · GNOME 45–50</span>
+      </div>
+      <nav class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#install">Install</a>
+        <a href="https://ubermetroid.github.io/kelp/">Kelp Tiler</a>
+        <a href="https://ubermetroid.github.io/reef/">Reef Dock</a>
+        <a href="https://ubermetroid.github.io/shoal/">Shoal Tray</a>
+        <a href="https://ubermetroid.github.io/tuition-not-coffee">🎓 Tuition, Not Coffee</a>
+        <a href="https://github.com/UberMetroid/coral">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero" style="border-top: none;">
+      <span class="eyebrow">coral@ubermetroid.github.io · Smart Auto-Groups · Zero Subprocesses</span>
+      <h1>Alphabetical App Grid &amp; Smart Auto-Folder Organizer That Stops Overflow Pages</h1>
+      <p class="subtitle">
+        Coral keeps your GNOME Shell 45–50 App Grid and every App Folder in crisp alphabetical order—and automatically groups loose apps into labeled Freedesktop category folders whenever your icons would spill onto an overflow page.
+      </p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="https://github.com/UberMetroid/coral/releases/latest">⬇ Download Coral v1.0.0 (.zip)</a>
+        <a class="btn" href="https://github.com/UberMetroid/coral">⭐ Star on GitHub</a>
+        <a class="btn" href="https://ubermetroid.github.io/tuition-not-coffee">🎓 Tuition, Not Coffee — Help send my daughter to college</a>
+      </div>
+
+      <div class="desktop-frame">
+        <div class="folder-grid">
+          <div class="folder-pill">📁 Accessories (A–Z)</div>
+          <div class="folder-pill">📁 Development (A–Z)</div>
+          <div class="folder-pill">📁 Games (A–Z)</div>
+          <div class="folder-pill">📁 Internet &amp; Social</div>
+          <div class="folder-pill">📁 Media &amp; Graphics</div>
+          <div class="folder-pill">📁 Office (A–Z)</div>
+          <div class="folder-pill">📁 System (A–Z)</div>
+          <div class="folder-pill">📁 Utilities (A–Z)</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="features">
+      <h2>Engineered for Kelp, Reef, Shoal &amp; Modern GNOME</h2>
+      <p class="section-lead">Derived from Alphabetical App Grid by Stuart Hayhurst and upgraded with smart overflow prevention and Kelp/Reef folder borders.</p>
+      <div class="grid-3">
+        <div class="card">
+          <h3>Smart Overflow Page Prevention</h3>
+          <p>When top-level icons exceed a single page (default 24), Coral inspects Freedesktop <code>.desktop</code> <code>Categories</code> and groups enough categories into labeled folders so your entire App Grid stays on Page 1.</p>
+        </div>
+        <div class="card">
+          <h3>Alphabetical Grid &amp; Folders</h3>
+          <p>Automatically sorts both the top-level App Grid and the icons inside every App Folder (<code>org.gnome.desktop.app-folders</code>), with <code>Z -&gt; A</code> reverse mode and configurable folder placement.</p>
+        </div>
+        <div class="card">
+          <h3>Kelp &amp; Reef Folder Accent Borders</h3>
+          <p>Styles open App Folder popups with a customizable accent border and 1-click presets (<em>Gruvbox Amber</em>, <em>Kelp Emerald</em>, <em>Ocean Cyan</em>, <em>Coral Red</em>).</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="install">
+      <h2>Quick Install</h2>
+      <p class="section-lead">Install from the latest GitHub Release bundle across Fedora, Debian, Ubuntu, Arch, openSUSE, and NixOS:</p>
+      <pre>gnome-extensions install --force coral@ubermetroid.github.io.shell-extension.zip
+gnome-extensions enable coral@ubermetroid.github.io</pre>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>
+        <strong>Coral</strong> (<code>coral@ubermetroid.github.io</code>) · Released under <a href="https://github.com/UberMetroid/coral/blob/main/LICENSE">GPL-3.0-or-later</a> · Derived from Alphabetical App Grid by Stuart Hayhurst &amp; contributors.<br>
+        <a href="https://github.com/UberMetroid/coral">⭐ Star on GitHub</a> · <a href="https://ubermetroid.github.io/tuition-not-coffee">🎓 Tuition, Not Coffee — Help send my daughter to college</a> · <a href="https://ubermetroid.github.io/kelp/">Kelp Auto-Tiler</a> · <a href="https://ubermetroid.github.io/reef/">Reef Dock</a> · <a href="https://ubermetroid.github.io/shoal/">Shoal Tray</a>
+      </p>
+    </div>
+  </footer>
+</body>
+</html>
