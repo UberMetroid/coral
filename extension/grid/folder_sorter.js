@@ -10,7 +10,8 @@ export const APP_FOLDERS_SCHEMA = 'org.gnome.desktop.app-folders';
 export const FOLDER_CHILD_SCHEMA = 'org.gnome.desktop.app-folders.folder';
 export const FOLDER_BASE_PATH = '/org/gnome/desktop/app-folders/folders/';
 
-function open_folder_settings(folder_id) {
+function open_folder_settings(folder_id, child_factory = null) {
+    if (typeof child_factory === 'function') return child_factory(folder_id);
     return Gio.Settings.new_with_path(FOLDER_CHILD_SCHEMA, `${FOLDER_BASE_PATH}${folder_id}/`);
 }
 
@@ -22,7 +23,7 @@ function arrays_equal(a, b) {
     return true;
 }
 
-export function read_existing_folders(folder_settings) {
+export function read_existing_folders(folder_settings, child_factory = null) {
     if (!folder_settings) return [];
     const ids = folder_settings.get_strv('folder-children').slice(0, MAX_FOLDERS);
     const result = [];
@@ -30,7 +31,7 @@ export function read_existing_folders(folder_settings) {
         const id = ids[i];
         if (typeof id !== 'string' || id.length === 0) continue;
         try {
-            const child = open_folder_settings(id);
+            const child = open_folder_settings(id, child_factory);
             const name = child.get_string('name');
             const apps = child.get_strv('apps');
             const excluded = child.get_strv('excluded-apps');
@@ -46,9 +47,10 @@ export function apply_auto_grouping_if_needed(
     favorite_ids_set,
     page_capacity,
     mode = 'overflow-only',
+    child_factory = null,
 ) {
     if (!folder_settings || !app_system) return false;
-    const folders = read_existing_folders(folder_settings);
+    const folders = read_existing_folders(folder_settings, child_factory);
     const folder_apps_set = new Set();
     for (let i = 0; i < folders.length; i += 1) {
         const active_apps = folders[i].apps.filter((id) => app_system.lookup_app(id) !== null);
@@ -84,9 +86,12 @@ export function apply_auto_grouping_if_needed(
 
     for (let i = 0; i < plan.assignments.length; i += 1) {
         const a = plan.assignments[i];
-        const child = open_folder_settings(a.folder_id);
-        if (!next_children.includes(a.folder_id)) {
+        const child = open_folder_settings(a.folder_id, child_factory);
+        const is_new_child = !next_children.includes(a.folder_id);
+        if (is_new_child) {
             next_children.push(a.folder_id);
+        }
+        if (is_new_child || child.get_string('name').trim().length === 0) {
             if (child.is_writable('name')) child.set_string('name', a.folder_name);
             if (child.is_writable('translate')) child.set_boolean('translate', false);
         }
@@ -109,7 +114,7 @@ export function apply_auto_grouping_if_needed(
     return changed;
 }
 
-export function sort_all_folders(folder_settings, app_system, reverse = false) {
+export function sort_all_folders(folder_settings, app_system, reverse = false, child_factory = null) {
     if (!folder_settings) return false;
     const folder_ids = folder_settings.get_strv('folder-children').slice(0, MAX_FOLDERS);
     const lookup_name = (id) => {
@@ -118,7 +123,7 @@ export function sort_all_folders(folder_settings, app_system, reverse = false) {
     };
     let changed = false;
     for (let i = 0; i < folder_ids.length; i += 1) {
-        const child = open_folder_settings(folder_ids[i]);
+        const child = open_folder_settings(folder_ids[i], child_factory);
         const current = child.get_strv('apps');
         const sorted = sort_desktop_ids_by_name(current, lookup_name, reverse);
         if (!arrays_equal(current, sorted) && child.is_writable('apps')) {
@@ -129,7 +134,7 @@ export function sort_all_folders(folder_settings, app_system, reverse = false) {
     return changed;
 }
 
-export function dissolve_coral_folders(folder_settings = null) {
+export function dissolve_coral_folders(folder_settings = null, child_factory = null) {
     const settings = folder_settings || new Gio.Settings({ schema_id: APP_FOLDERS_SCHEMA });
     const current = settings.get_strv('folder-children');
     const kept = [];
@@ -138,7 +143,7 @@ export function dissolve_coral_folders(folder_settings = null) {
         const id = current[i];
         if (typeof id === 'string' && id.startsWith('coral-')) {
             try {
-                const child = open_folder_settings(id);
+                const child = open_folder_settings(id, child_factory);
                 const keys = child.settings_schema ? child.settings_schema.list_keys() : ['apps', 'name', 'translate'];
                 for (let k = 0; k < keys.length; k += 1) child.reset(keys[k]);
             } catch (_e) { /* ignore */ }

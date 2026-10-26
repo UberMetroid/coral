@@ -4,20 +4,16 @@
 import GLib from 'gi://GLib';
 import Gio from 'gi://Gio';
 import {
-    CATEGORY_BUCKETS, MAX_FOLDERS, classify_app_category,
-    parse_desktop_categories, plan_overflow_grouping,
+    CATEGORY_BUCKETS, MAX_FOLDERS, classify_app_category, parse_desktop_categories, plan_overflow_grouping,
 } from '../extension/grid/auto_grouper.js';
-import {
-    MAX_GRID_APPS, alphabetical_compare, compare_grid_items, sort_desktop_ids_by_name,
-} from '../extension/grid/grid_sorter.js';
+import { apply_auto_grouping_if_needed, dissolve_coral_folders, sort_all_folders } from '../extension/grid/folder_sorter.js';
+import { MAX_GRID_APPS, alphabetical_compare, compare_grid_items, sort_desktop_ids_by_name } from '../extension/grid/grid_sorter.js';
 import { build_folder_dialog_css } from '../extension/ui/folder_style.js';
 import { format_rgba, is_dark_rgba, parse_rgba, text_color_for_css } from '../extension/ui/settings/color.js';
 import { AUTO_GROUP_MODES, ExtensionSettings, FOLDER_POSITIONS } from '../extension/ui/settings/gsettings.js';
 import { BORDER_PRESETS, build_about_page, build_folder_styling_page } from '../extension/ui/settings/prefs_pages.js';
 
-const BANNED_STEMS = new Set([
-    'util', 'utils', 'lib', 'helper', 'helpers', 'common', 'misc', 'shared', 'base', 'core', 'types', 'mod',
-]);
+const BANNED_STEMS = new Set(['util', 'utils', 'lib', 'helper', 'helpers', 'common', 'misc', 'shared', 'base', 'core', 'types', 'mod']);
 const DECODER = new TextDecoder('utf-8');
 const REPO_ROOT = Gio.File.new_for_uri(import.meta.url).get_parent().get_parent().get_path();
 const EXT_ROOT = GLib.build_filenamev([REPO_ROOT, 'extension']);
@@ -34,11 +30,8 @@ function read_text(path) {
 
 function walk_repo(dir_path, js_files, dirs) {
     dirs.push(dir_path);
-    const enumerator = Gio.File.new_for_path(dir_path).enumerate_children(
-        'standard::name,standard::type', Gio.FileQueryInfoFlags.NONE, null,
-    );
-    let info;
-    while ((info = enumerator.next_file(null)) !== null) {
+    const enumerator = Gio.File.new_for_path(dir_path).enumerate_children('standard::name,standard::type', Gio.FileQueryInfoFlags.NONE, null);
+    for (let info; (info = enumerator.next_file(null)) !== null;) {
         const name = info.get_name();
         if (name.startsWith('.') || name === 'dist' || name === 'target') continue;
         const full = GLib.build_filenamev([dir_path, name]);
@@ -50,29 +43,21 @@ function walk_repo(dir_path, js_files, dirs) {
 
 function verify_page_rules_and_lint(js_files, dirs) {
     assert(js_files.length === 12, `expected 12 .js files, found ${js_files.length}`);
-    const legacy = [
-        'imports.gi', 'imports.ui', 'imports.misc', 'ExtensionUtils',
-        'Meta.LaterType', 'Clutter.Container', 'add_actor', 'remove_actor', 'new String(',
-    ];
+    const legacy = ['imports.gi', 'imports.ui', 'imports.misc', 'ExtensionUtils', 'Meta.LaterType', 'Clutter.Container', 'add_actor', 'remove_actor', 'new String('];
     for (const file of js_files) {
         const content = read_text(file);
         const lines = content.endsWith('\n') ? content.slice(0, -1).split('\n') : content.split('\n');
-        assert(lines.length >= 16 && lines.length <= 256,
-            `Page Rule violation: ${file} has ${lines.length} lines (16..=256)`);
+        assert(lines.length >= 16 && lines.length <= 256, `Page Rule violation: ${file} has ${lines.length} lines (16..=256)`);
         assert(lines[0] === '// SPDX-License-Identifier: GPL-3.0-or-later', `Missing SPDX header in ${file}`);
-        assert(lines[1].startsWith('// ') && lines[1].length >= 12,
-            `Missing concise module description on line 2 of ${file}`);
+        assert(lines[1].startsWith('// ') && lines[1].length >= 12, `Missing concise module description on line 2 of ${file}`);
         if (file.startsWith(EXT_ROOT)) {
-            for (const sym of legacy) {
-                assert(!content.includes(sym), `Forbidden legacy symbol '${sym}' in ${file}`);
-            }
+            for (const sym of legacy) assert(!content.includes(sym), `Forbidden legacy symbol '${sym}' in ${file}`);
         }
         for (let idx = 0; idx < lines.length; idx += 1) {
             const raw = lines[idx], ln = idx + 1, code = raw.split('//')[0];
             assert(raw.length <= 200, `Line ${ln} of ${file} exceeds 200 chars (${raw.length})`);
             if (!file.startsWith(EXT_ROOT)) continue;
-            assert(!code.trimStart().startsWith('var ') && !code.includes(' var ') && !code.includes('(var '),
-                `Forbidden var in ${file}:${ln}`);
+            assert(!code.trimStart().startsWith('var ') && !code.includes(' var ') && !code.includes('(var '), `Forbidden var in ${file}:${ln}`);
             for (let i = 0; i < code.length - 1; i += 1) {
                 const prev = i > 0 ? code[i - 1] : '';
                 const prev_eq = prev === '=' || prev === '!' || prev === '<' || prev === '>';
@@ -83,9 +68,7 @@ function verify_page_rules_and_lint(js_files, dirs) {
         }
     }
     for (const dir_path of dirs) {
-        const enumerator = Gio.File.new_for_path(dir_path).enumerate_children(
-            'standard::name', Gio.FileQueryInfoFlags.NONE, null,
-        );
+        const enumerator = Gio.File.new_for_path(dir_path).enumerate_children('standard::name', Gio.FileQueryInfoFlags.NONE, null);
         const visible = [];
         let info;
         while ((info = enumerator.next_file(null)) !== null) {
@@ -93,8 +76,7 @@ function verify_page_rules_and_lint(js_files, dirs) {
             if (!name.startsWith('.') && name !== 'dist' && name !== 'target') visible.push(name);
         }
         enumerator.close(null);
-        assert(visible.length <= 8,
-            `Directory density violation: ${dir_path} has ${visible.length} visible entries (max 8)`);
+        assert(visible.length <= 8, `Directory density violation: ${dir_path} has ${visible.length} visible entries (max 8)`);
         for (const name of visible) {
             const stem = (name.includes('.') ? name.slice(0, name.lastIndexOf('.')) : name).toLowerCase();
             assert(!BANNED_STEMS.has(stem), `Banned generic name '${name}' in ${dir_path}`);
@@ -111,9 +93,7 @@ function verify_process_boundaries_and_invariants() {
     for (const rel of shared) {
         for (const raw of read_text(GLib.build_filenamev([EXT_ROOT, rel])).split('\n')) {
             const code = raw.split('//')[0];
-            for (const sym of compositor_only) {
-                assert(!code.includes(sym), `Process-boundary violation: ${rel} imports '${sym}'`);
-            }
+            for (const sym of compositor_only) assert(!code.includes(sym), `Process-boundary violation: ${rel} imports '${sym}'`);
         }
     }
     const check_files = [
@@ -145,8 +125,7 @@ async function verify_behavioral_and_gtk_suite() {
     const dst_xml = Gio.File.new_for_path(GLib.build_filenamev([tmp_dir, schema_xml]));
     Gio.File.new_for_path(GLib.build_filenamev([EXT_ROOT, 'schemas', schema_xml]))
         .copy(dst_xml, Gio.FileCopyFlags.OVERWRITE, null, null);
-    assert(Gio.Subprocess.new(['glib-compile-schemas', tmp_dir], Gio.SubprocessFlags.NONE).wait_check(null),
-        'glib-compile-schemas');
+    assert(Gio.Subprocess.new(['glib-compile-schemas', tmp_dir], Gio.SubprocessFlags.NONE).wait_check(null), 'schema');
     const src = Gio.SettingsSchemaSource.new_from_directory(tmp_dir, Gio.SettingsSchemaSource.get_default(), false);
     const ext_settings = new Gio.Settings({
         settings_schema: src.lookup('org.gnome.shell.extensions.coral', true),
@@ -173,14 +152,12 @@ async function verify_behavioral_and_gtk_suite() {
     s.set_border_color_rgba('#2ec27e');
     assert(s.border_width() === 8 && s.border_radius() === 36 && s.border_color_rgba() === 'rgba(46, 194, 126, 1)', 'border');
     assert(is_dark_rgba(parse_rgba('#111111')) && text_color_for_css('#ffffff') === '#000000', 'luminance');
-    assert(build_folder_dialog_css(true, 2, 24, 'rgb(255,0,0)') ===
-        'border: 2px solid rgba(255, 0, 0, 1); border-radius: 24px;', 'folder dialog css');
+    assert(build_folder_dialog_css(true, 2, 24, 'rgb(255,0,0)') === 'border: 2px solid rgba(255, 0, 0, 1); border-radius: 24px;', 'css');
     assert(build_folder_dialog_css(false, 2, 24, 'rgb(255,0,0)') === 'border-radius: 24px;', 'disabled border css');
     s.reset_defaults();
     assert(s.max_items_per_page() === 24 && format_rgba(parse_rgba(s.border_color_rgba())) === 'rgba(255, 0, 0, 1)', 'rst');
     assert(alphabetical_compare('Alacritty', 'Firefox', false) < 0 && alphabetical_compare('Alacritty', 'Firefox', true) > 0, 'cmp');
-    const folder_item = { id: 'Games', name: 'Games' };
-    const app_item = { id: 'alacritty.desktop', name: 'Alacritty' };
+    const folder_item = { id: 'Games', name: 'Games' }, app_item = { id: 'alacritty.desktop', name: 'Alacritty' };
     assert(compare_grid_items(folder_item, app_item, 'start', ['Games'], false) < 0, 'folder at start');
     assert(compare_grid_items(folder_item, app_item, 'end', ['Games'], false) > 0, 'folder at end');
     assert(compare_grid_items(folder_item, app_item, 'alphabetical', ['Games'], false) > 0, 'folder alphabetical');
@@ -193,8 +170,8 @@ async function verify_behavioral_and_gtk_suite() {
 
     const small_loose = Array.from({ length: 18 }, (_, i) => ({ id: `app-${i}.desktop`, categories: 'Utility;' }));
     const existing_g = [{ id: 'Games', name: 'Games', apps: ['g1.desktop'] }];
-    const no_overflow = plan_overflow_grouping(small_loose, existing_g, 24, 'overflow-only');
-    assert(!no_overflow.triggered && no_overflow.assignments.length === 0, 'no auto-group when <= capacity');
+    const no_overflow = plan_overflow_grouping([...small_loose, small_loose[0]], existing_g, 24, 'overflow-only');
+    assert(!no_overflow.triggered && no_overflow.initial_top_level === 19, 'dedup & no auto-group when <= capacity');
     const all_cat = plan_overflow_grouping(small_loose, [], 24, 'all-categories');
     assert(all_cat.triggered && all_cat.assignments[0].folder_id === 'coral-accessories', 'all-cat');
 
@@ -208,9 +185,32 @@ async function verify_behavioral_and_gtk_suite() {
     const plan = plan_overflow_grouping(overflow_loose, existing_f, 24, 'overflow-only');
     assert(plan.triggered && plan.initial_top_level === 30 && plan.final_top_level <= 24, 'overflow page prevented');
 
+    const mem = new Map(), mk_child = (id) => {
+        if (!mem.has(id)) {
+            const st = { name: '', translate: false, apps: [], 'excluded-apps': [] };
+            mem.set(id, {
+                get_string: (k) => st[k] || '', get_strv: (k) => (st[k] || []).slice(), is_writable: () => true,
+                set_string: (k, v) => { st[k] = v; }, set_boolean: (k, v) => { st[k] = v; },
+                set_value: (k, v) => { st[k] = v.deepUnpack(); }, reset: (k) => { st[k] = k === 'apps' ? [] : ''; },
+            });
+        }
+        return mem.get(id);
+    };
+    let children_ids = ['coral-games'];
+    const mock_fs = { get_strv: () => children_ids.slice(), is_writable: () => true, set_strv: (_k, v) => { children_ids = v.slice(); } };
+    const mock_sys = {
+        lookup_app: (id) => ({ get_name: () => id }),
+        get_installed: () => Array.from({ length: 15 }, (_, i) => ({
+            get_id: () => `g-${14 - i}.desktop`, get_name: () => `Game ${14 - i}`, should_show: () => true, get_categories: () => 'Game;',
+        })),
+    };
+    assert(apply_auto_grouping_if_needed(mock_fs, mock_sys, new Set(), 12, 'overflow-only', mk_child), 'auto_group');
+    assert(mk_child('coral-games').get_string('name') === 'Games', 'empty existing folder name repaired');
+    assert(sort_all_folders(mock_fs, mock_sys, false, mk_child) && mk_child('coral-games').get_strv('apps')[0] === 'g-0.desktop', 'sort_all');
+    assert(dissolve_coral_folders(mock_fs, mk_child) === 1 && children_ids.length === 0, 'dissolve_coral_folders');
+
     try {
-        const Gtk = (await import('gi://Gtk?version=4.0')).default;
-        const Adw = (await import('gi://Adw?version=1')).default;
+        const Gtk = (await import('gi://Gtk?version=4.0')).default, Adw = (await import('gi://Adw?version=1')).default;
         if (Gtk.init_check()) {
             Adw.init();
             const signals = [];

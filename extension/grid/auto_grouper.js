@@ -129,8 +129,16 @@ export function plan_overflow_grouping(
     const safe_apps = Array.isArray(loose_apps) ? loose_apps.slice(0, MAX_GRID_APPS) : [];
     const safe_folders = Array.isArray(existing_folders) ? existing_folders.slice(0, MAX_FOLDERS) : [];
     const capacity = Math.max(12, Math.min(48, Math.round(Number(page_capacity) || 24)));
+    const unique_apps = [];
+    const seen_app_ids = new Set();
+    for (let i = 0; i < safe_apps.length; i += 1) {
+        const app = safe_apps[i];
+        if (!app || typeof app.id !== 'string' || app.id.length === 0 || seen_app_ids.has(app.id)) continue;
+        seen_app_ids.add(app.id);
+        unique_apps.push(app);
+    }
     const active_folders = safe_folders.filter((f) => Array.isArray(f?.apps) && f.apps.length > 0);
-    let top_level_count = safe_apps.length + active_folders.length;
+    let top_level_count = unique_apps.length + active_folders.length;
 
     if (mode !== 'all-categories' && top_level_count <= capacity) {
         return {
@@ -143,9 +151,8 @@ export function plan_overflow_grouping(
     }
 
     const grouped_by_key = new Map();
-    for (let i = 0; i < safe_apps.length; i += 1) {
-        const app = safe_apps[i];
-        if (!app || typeof app.id !== 'string' || app.id.length === 0) continue;
+    for (let i = 0; i < unique_apps.length; i += 1) {
+        const app = unique_apps[i];
         const bucket = classify_app_category(app.categories);
         if (!bucket) continue;
         if (!grouped_by_key.has(bucket.key)) grouped_by_key.set(bucket.key, { bucket, app_ids: [] });
