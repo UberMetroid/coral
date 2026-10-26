@@ -1,0 +1,17 @@
+{
+    "name": "Coral",
+    "description": "Wayland-native alphabetical application grid and smart auto-folder organizer for GNOME Shell that prevents overflow pages by grouping apps into labeled category folders.\n\nDerived from Alphabetical App Grid by Stuart Hayhurst (GPL-3.0-or-later).",
+    "uuid": "coral@ubermetroid.github.io",
+    "url": "https://github.com/UberMetroid/coral",
+    "settings-schema": "org.gnome.shell.extensions.coral",
+    "gettext-domain": "coral@ubermetroid.github.io",
+    "version-name": "1.0.0",
+    "shell-version": [
+        "45",
+        "46",
+        "47",
+        "48",
+        "49",
+        "50"
+    ]
+}
