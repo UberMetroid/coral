@@ -9,7 +9,7 @@ import {
 import { apply_auto_grouping_if_needed, dissolve_coral_folders, sort_all_folders } from '../extension/grid/folder_sorter.js';
 import { MAX_GRID_APPS, alphabetical_compare, compare_grid_items, sort_desktop_ids_by_name } from '../extension/grid/grid_sorter.js';
 import { build_folder_dialog_css } from '../extension/ui/folder_style.js';
-import { format_rgba, is_dark_rgba, parse_rgba, text_color_for_css } from '../extension/ui/settings/color.js';
+import { SUITE_COLOR_TARGETS, format_rgba, is_dark_rgba, parse_rgba, sync_color_across_suite, text_color_for_css } from '../extension/ui/settings/color.js';
 import { AUTO_GROUP_MODES, ExtensionSettings, FOLDER_POSITIONS } from '../extension/ui/settings/gsettings.js';
 import { BORDER_PRESETS, build_about_page, build_folder_styling_page } from '../extension/ui/settings/prefs_pages.js';
 
@@ -18,9 +18,7 @@ const DECODER = new TextDecoder('utf-8');
 const REPO_ROOT = Gio.File.new_for_uri(import.meta.url).get_parent().get_parent().get_path();
 const EXT_ROOT = GLib.build_filenamev([REPO_ROOT, 'extension']);
 
-function assert(cond, msg) {
-    if (!cond) throw new Error(`Verification failed: ${msg}`);
-}
+function assert(cond, msg) { if (!cond) throw new Error(`Verification failed: ${msg}`); }
 
 function read_text(path) {
     const [ok, bytes] = GLib.file_get_contents(path);
@@ -50,9 +48,7 @@ function verify_page_rules_and_lint(js_files, dirs) {
         assert(lines.length >= 16 && lines.length <= 256, `Page Rule violation: ${file} has ${lines.length} lines (16..=256)`);
         assert(lines[0] === '// SPDX-License-Identifier: GPL-3.0-or-later', `Missing SPDX header in ${file}`);
         assert(lines[1].startsWith('// ') && lines[1].length >= 12, `Missing concise module description on line 2 of ${file}`);
-        if (file.startsWith(EXT_ROOT)) {
-            for (const sym of legacy) assert(!content.includes(sym), `Forbidden legacy symbol '${sym}' in ${file}`);
-        }
+        if (file.startsWith(EXT_ROOT)) for (const sym of legacy) assert(!content.includes(sym), `Forbidden legacy symbol '${sym}' in ${file}`);
         for (let idx = 0; idx < lines.length; idx += 1) {
             const raw = lines[idx], ln = idx + 1, code = raw.split('//')[0];
             assert(raw.length <= 200, `Line ${ln} of ${file} exceeds 200 chars (${raw.length})`);
@@ -70,8 +66,7 @@ function verify_page_rules_and_lint(js_files, dirs) {
     for (const dir_path of dirs) {
         const enumerator = Gio.File.new_for_path(dir_path).enumerate_children('standard::name', Gio.FileQueryInfoFlags.NONE, null);
         const visible = [];
-        let info;
-        while ((info = enumerator.next_file(null)) !== null) {
+        for (let info; (info = enumerator.next_file(null)) !== null;) {
             const name = info.get_name();
             if (!name.startsWith('.') && name !== 'dist' && name !== 'target') visible.push(name);
         }
@@ -110,7 +105,8 @@ function verify_process_boundaries_and_invariants() {
         'Derived from Alphabetical App Grid by Stuart Hayhurst',
         '[coral] reorder-grid', 'this._injection_manager?.clear()', 'dissolve_coral_folders',
         '"45"', '"50"', '"settings-schema": "org.gnome.shell.extensions.coral"',
-        'name="auto-group-overflow"', 'name="folder-order-position"', '1.2.2',
+        'name="auto-group-overflow"', 'name="folder-order-position"', '1.3.0',
+        '"name": "Studio 2201: Coral (App Grid)"', 'Sync Color Across Suite', 'sync_color_across_suite',
         'this.unload_theme()', 'load_stylesheet(file)', 'Support &amp; Community',
     ];
     for (const req of reqs) assert(combined.includes(req), `Missing invariant: ${req}`);
@@ -123,15 +119,18 @@ async function verify_behavioral_and_gtk_suite() {
     const tmp_dir = GLib.dir_make_tmp('coral-verify-XXXXXX');
     const schema_xml = 'org.gnome.shell.extensions.coral.gschema.xml';
     const dst_xml = Gio.File.new_for_path(GLib.build_filenamev([tmp_dir, schema_xml]));
-    Gio.File.new_for_path(GLib.build_filenamev([EXT_ROOT, 'schemas', schema_xml]))
-        .copy(dst_xml, Gio.FileCopyFlags.OVERWRITE, null, null);
+    Gio.File.new_for_path(GLib.build_filenamev([EXT_ROOT, 'schemas', schema_xml])).copy(dst_xml, Gio.FileCopyFlags.OVERWRITE, null, null);
     assert(Gio.Subprocess.new(['glib-compile-schemas', tmp_dir], Gio.SubprocessFlags.NONE).wait_check(null), 'schema');
     const src = Gio.SettingsSchemaSource.new_from_directory(tmp_dir, Gio.SettingsSchemaSource.get_default(), false);
-    const ext_settings = new Gio.Settings({
-        settings_schema: src.lookup('org.gnome.shell.extensions.coral', true),
-        backend: Gio.memory_settings_backend_new(),
-    });
+    const mem_backend = Gio.memory_settings_backend_new();
+    const ext_settings = new Gio.Settings({ settings_schema: src.lookup('org.gnome.shell.extensions.coral', true), backend: mem_backend });
     const s = new ExtensionSettings(ext_settings);
+    const suite_dir = GLib.build_filenamev([tmp_dir, 'coral@ubermetroid.github.io', 'schemas']);
+    GLib.mkdir_with_parents(suite_dir, 0o755);
+    const suite_comp = Gio.File.new_for_path(GLib.build_filenamev([suite_dir, 'gschemas.compiled']));
+    Gio.File.new_for_path(GLib.build_filenamev([tmp_dir, 'gschemas.compiled'])).copy(suite_comp, Gio.FileCopyFlags.OVERWRITE, null, null);
+    assert(SUITE_COLOR_TARGETS.length === 5 && sync_color_across_suite('#6ad7e1', tmp_dir, mem_backend) === 1 && s.border_color_rgba() === 'rgba(106, 215, 225, 1)', 'suite sync');
+    s.reset_defaults();
 
     assert(s.folder_order_position() === 'alphabetical' && s.sort_folder_contents() && s.auto_group_overflow(), 'defs');
     assert(s.auto_group_mode() === 'overflow-only' && s.max_items_per_page() === 24 && !s.reverse_order(), 'grid defs');
@@ -245,7 +244,8 @@ async function verify_behavioral_and_gtk_suite() {
         }
     } catch (e) { if (String(e).includes('Verification failed')) throw e; }
     const comp = Gio.File.new_for_path(GLib.build_filenamev([tmp_dir, 'gschemas.compiled']));
-    for (const f of [dst_xml, comp, Gio.File.new_for_path(tmp_dir)]) f.delete(null);
+    const s_root = Gio.File.new_for_path(GLib.build_filenamev([tmp_dir, 'coral@ubermetroid.github.io']));
+    for (const f of [suite_comp, Gio.File.new_for_path(suite_dir), s_root, dst_xml, comp, Gio.File.new_for_path(tmp_dir)]) f.delete(null);
 }
 
 const js_files = [], dirs = [];

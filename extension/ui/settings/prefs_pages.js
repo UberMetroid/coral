@@ -6,7 +6,7 @@ import Gdk from 'gi://Gdk';
 import Gio from 'gi://Gio';
 import Gtk from 'gi://Gtk';
 import { CATEGORY_BUCKETS } from '../../grid/auto_grouper.js';
-import { format_rgba, parse_rgba } from './color.js';
+import { format_rgba, parse_rgba, sync_color_across_suite } from './color.js';
 
 export const BORDER_PRESETS = Object.freeze([
     ['Gruvbox Amber', 'rgb(251,184,108)'],
@@ -112,6 +112,15 @@ export function build_folder_styling_page(ext_settings, settings, signals) {
         },
     );
 
+    const sync_row = new Adw.ActionRow({
+        title: 'Sync Color Across Suite',
+        subtitle: 'Apply this accent border color to all installed Studio 2201 extensions (Coral, Kelp, Reef, Seabed, Tide)',
+    });
+    const sync_btn = new Gtk.Button({ label: 'Sync Suite Color', valign: Gtk.Align.CENTER, css_classes: ['pill'] });
+    sync_btn.connect('clicked', () => sync_color_across_suite(settings.border_color_rgba()));
+    sync_row.add_suffix(sync_btn);
+    sync_row.activatable_widget = sync_btn;
+
     const [bw_row, bw_spin] = make_spin_row(
         'Border Width (px)',
         'Thickness of the App Folder popup border ring (0–8 px, default 2 px)',
@@ -125,7 +134,7 @@ export function build_folder_styling_page(ext_settings, settings, signals) {
         (v) => settings.set_border_radius(v),
     );
 
-    for (const r of [bdr_row, color_row, preset_row, bw_row, br_row]) style_group.add(r);
+    for (const r of [bdr_row, color_row, preset_row, sync_row, bw_row, br_row]) style_group.add(r);
     page.add(style_group);
 
     const cat_group = new Adw.PreferencesGroup({
@@ -166,7 +175,7 @@ export function build_folder_styling_page(ext_settings, settings, signals) {
     return page;
 }
 
-export function build_about_page(version_name = '1.2.2') {
+export function build_about_page(version_name = '1.3.0') {
     const page = new Adw.PreferencesPage({
         title: 'About & Support',
         icon_name: 'help-about-symbolic',
@@ -182,7 +191,7 @@ export function build_about_page(version_name = '1.2.2') {
         title: 'Coral Release Version',
         subtitle: 'Zero-subprocess, zero-telemetry Wayland App Grid organizer for GNOME Shell',
     });
-    const clean_ver = String(version_name || '1.2.2').replace(/^v/, '');
+    const clean_ver = String(version_name || '1.3.0').replace(/^v/, '');
     ver_row.add_suffix(new Gtk.Label({
         label: `v${clean_ver}`, valign: Gtk.Align.CENTER, css_classes: ['monospace'],
     }));
