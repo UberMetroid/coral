@@ -2,7 +2,7 @@
 
 ## 1. Global Engineering Philosophy
 
-Coral (`coral@ubermetroid.github.io`) is built on four uncompromising engineering pillars:
+Coral (`coral@studio2201.github.io`) is built on four uncompromising engineering pillars:
 
 1. **Linus Torvalds' "Good Taste"**: Eliminate special-case branching through clean data representation (immutable frozen category tables, pure alphabetical comparators, and deterministic greedy overflow-page prevention planning).
 2. **UNIX Philosophy**: Each module ("page") does one thing well, composes cleanly via explicit ES2022 imports, and avoids hidden global state.

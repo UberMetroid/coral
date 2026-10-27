@@ -175,7 +175,7 @@ export function build_folder_styling_page(ext_settings, settings, signals) {
     return page;
 }
 
-export function build_about_page(version_name = '1.3.0') {
+export function build_about_page(version_name = '1.4.0') {
     const page = new Adw.PreferencesPage({
         title: 'About & Support',
         icon_name: 'help-about-symbolic',
@@ -191,7 +191,7 @@ export function build_about_page(version_name = '1.3.0') {
         title: 'Coral Release Version',
         subtitle: 'Zero-subprocess, zero-telemetry Wayland App Grid organizer for GNOME Shell',
     });
-    const clean_ver = String(version_name || '1.3.0').replace(/^v/, '');
+    const clean_ver = String(version_name || '1.4.0').replace(/^v/, '');
     ver_row.add_suffix(new Gtk.Label({
         label: `v${clean_ver}`, valign: Gtk.Align.CENTER, css_classes: ['monospace'],
     }));
@@ -216,9 +216,9 @@ export function build_about_page(version_name = '1.3.0') {
     add_link_row(
         support_group,
         'Star Coral on GitHub',
-        'Star UberMetroid/coral to help other GNOME &amp; Linux users discover Coral',
+        'Star studio2201/coral to help other GNOME &amp; Linux users discover Coral',
         'Star on GitHub',
-        'https://github.com/UberMetroid/coral',
+        'https://github.com/studio2201/coral',
     );
     add_link_row(
         support_group,
@@ -226,21 +226,21 @@ export function build_about_page(version_name = '1.3.0') {
         "Skip the coffee — 100% of sponsorships go toward my daughter's college &amp; future fund",
         'Tuition, Not Coffee',
         'https://ubermetroid.github.io/tuition-not-coffee',
-        'https://github.com/UberMetroid/coral',
+        'https://github.com/studio2201/coral',
     );
     add_link_row(
         support_group,
         'Project Website &amp; Documentation',
         'Explore the Coral feature guide, smart auto-group overview, and configuration reference',
         'Open Website',
-        'https://ubermetroid.github.io/coral/',
+        'https://studio2201.github.io/coral/',
     );
     add_link_row(
         support_group,
         'Report an Issue or Request a Feature',
         'Found a bug or have a feature request? Open an issue on GitHub',
         'Report Issue',
-        'https://github.com/UberMetroid/coral/issues',
+        'https://github.com/studio2201/coral/issues',
     );
 
     page.add(support_group);

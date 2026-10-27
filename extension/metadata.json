@@ -1,11 +1,11 @@
 {
     "name": "Studio 2201: Coral (App Grid)",
     "description": "Wayland-native alphabetical application grid and smart auto-folder organizer for GNOME Shell that prevents overflow pages by grouping apps into labeled category folders.\n\nDerived from Alphabetical App Grid by Stuart Hayhurst (GPL-3.0-or-later).",
-    "uuid": "coral@ubermetroid.github.io",
-    "url": "https://github.com/UberMetroid/coral",
+    "uuid": "coral@studio2201.github.io",
+    "url": "https://github.com/studio2201/coral",
     "settings-schema": "org.gnome.shell.extensions.coral",
-    "gettext-domain": "coral@ubermetroid.github.io",
-    "version-name": "1.3.0",
+    "gettext-domain": "coral@studio2201.github.io",
+    "version-name": "1.4.0",
     "shell-version": [
         "45",
         "46",

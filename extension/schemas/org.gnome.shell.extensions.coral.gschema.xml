@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<schemalist gettext-domain="coral@ubermetroid.github.io">
+<schemalist gettext-domain="coral@studio2201.github.io">
   <schema id="org.gnome.shell.extensions.coral" path="/org/gnome/shell/extensions/coral/">
     <key name="folder-order-position" type="s">
       <default>'alphabetical'</default>

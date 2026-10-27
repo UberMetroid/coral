@@ -105,7 +105,7 @@ function verify_process_boundaries_and_invariants() {
         'Derived from Alphabetical App Grid by Stuart Hayhurst',
         '[coral] reorder-grid', 'this._injection_manager?.clear()', 'dissolve_coral_folders',
         '"45"', '"50"', '"settings-schema": "org.gnome.shell.extensions.coral"',
-        'name="auto-group-overflow"', 'name="folder-order-position"', '1.3.0',
+        'name="auto-group-overflow"', 'name="folder-order-position"', '1.4.0',
         '"name": "Studio 2201: Coral (App Grid)"', 'Sync Color Across Suite', 'sync_color_across_suite',
         'this.unload_theme()', 'load_stylesheet(file)', 'Support &amp; Community',
     ];
@@ -125,7 +125,7 @@ async function verify_behavioral_and_gtk_suite() {
     const mem_backend = Gio.memory_settings_backend_new();
     const ext_settings = new Gio.Settings({ settings_schema: src.lookup('org.gnome.shell.extensions.coral', true), backend: mem_backend });
     const s = new ExtensionSettings(ext_settings);
-    const suite_dir = GLib.build_filenamev([tmp_dir, 'coral@ubermetroid.github.io', 'schemas']);
+    const suite_dir = GLib.build_filenamev([tmp_dir, 'coral@studio2201.github.io', 'schemas']);
     GLib.mkdir_with_parents(suite_dir, 0o755);
     const suite_comp = Gio.File.new_for_path(GLib.build_filenamev([suite_dir, 'gschemas.compiled']));
     Gio.File.new_for_path(GLib.build_filenamev([tmp_dir, 'gschemas.compiled'])).copy(suite_comp, Gio.FileCopyFlags.OVERWRITE, null, null);
@@ -244,7 +244,7 @@ async function verify_behavioral_and_gtk_suite() {
         }
     } catch (e) { if (String(e).includes('Verification failed')) throw e; }
     const comp = Gio.File.new_for_path(GLib.build_filenamev([tmp_dir, 'gschemas.compiled']));
-    const s_root = Gio.File.new_for_path(GLib.build_filenamev([tmp_dir, 'coral@ubermetroid.github.io']));
+    const s_root = Gio.File.new_for_path(GLib.build_filenamev([tmp_dir, 'coral@studio2201.github.io']));
     for (const f of [suite_comp, Gio.File.new_for_path(suite_dir), s_root, dst_xml, comp, Gio.File.new_for_path(tmp_dir)]) f.delete(null);
 }
 

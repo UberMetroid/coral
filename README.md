@@ -4,17 +4,17 @@
 
 # Coral
 
-[![CI & EGO Bundle Verification](https://github.com/UberMetroid/coral/actions/workflows/ci.yml/badge.svg)](https://github.com/UberMetroid/coral/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/UberMetroid/coral)](https://github.com/UberMetroid/coral/releases/latest)
+[![CI & EGO Bundle Verification](https://github.com/studio2201/coral/actions/workflows/ci.yml/badge.svg)](https://github.com/studio2201/coral/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/studio2201/coral)](https://github.com/studio2201/coral/releases/latest)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE)
 [![Sponsor: Tuition, Not Coffee](https://img.shields.io/badge/Sponsor-Tuition%2C%20Not%20Coffee%20%F0%9F%8E%93-2ec27e)](https://ubermetroid.github.io/tuition-not-coffee)
-[![Star on GitHub](https://img.shields.io/github/stars/UberMetroid/coral?style=social)](https://github.com/UberMetroid/coral)
+[![Star on GitHub](https://img.shields.io/github/stars/studio2201/coral?style=social)](https://github.com/studio2201/coral)
 
-**Coral** (`coral@ubermetroid.github.io`) is a fast, zero-subprocess, Wayland-native **Alphabetical Application Grid & Smart Auto-Folder Organizer** for **GNOME Shell 45–50**. It keeps your GNOME Overview App Grid and every App Folder in crisp alphabetical order, automatically groups loose applications into labeled category folders whenever your icons would spill onto an overflow page, and adds Kelp/Reef accent borders to open App Folder popups.
+**Coral** (`coral@studio2201.github.io`) is a fast, zero-subprocess, Wayland-native **Alphabetical Application Grid & Smart Auto-Folder Organizer** for **GNOME Shell 45–50**. It keeps your GNOME Overview App Grid and every App Folder in crisp alphabetical order, automatically groups loose applications into labeled category folders whenever your icons would spill onto an overflow page, and adds Kelp/Reef accent borders to open App Folder popups.
 
-Derived from [Alphabetical App Grid](https://github.com/stuarthayhurst/alphabetical-grid-extension) (`AlphabeticalAppGrid@stuarthayhurst` by Stuart Hayhurst) — hardened against module-scope compositor access (`Main.overview._overview._controls`), upgraded with **Smart Auto-Group Overflow Prevention**, pinned-favorites grid display, and App Folder accent styling, and engineered under the same strict [`AGENTS.md`](AGENTS.md) Page Rule and EGO standards as [**Kelp**](https://github.com/UberMetroid/kelp), [**Reef**](https://github.com/UberMetroid/reef), and [**Shoal**](https://github.com/UberMetroid/shoal). Official project artwork is archived in [`brand/`](brand/) (`icon-512.png`, `icon-256.png`, `icon-160.png`, `favicon-64.png`).
+Derived from [Alphabetical App Grid](https://github.com/stuarthayhurst/alphabetical-grid-extension) (`AlphabeticalAppGrid@stuarthayhurst` by Stuart Hayhurst) — hardened against module-scope compositor access (`Main.overview._overview._controls`), upgraded with **Smart Auto-Group Overflow Prevention**, pinned-favorites grid display, and App Folder accent styling, and engineered under the same strict [`AGENTS.md`](AGENTS.md) Page Rule and EGO standards as [**Kelp**](https://github.com/studio2201/kelp), [**Reef**](https://github.com/studio2201/reef), and [**Shoal**](https://github.com/studio2201/shoal). Official project artwork is archived in [`brand/`](brand/) (`icon-512.png`, `icon-256.png`, `icon-160.png`, `favicon-64.png`).
 
-> 🎓 **Support Coral — [Tuition, Not Coffee — Help send my daughter to college](https://ubermetroid.github.io/tuition-not-coffee)** · 🌐 [**Project Website (`ubermetroid.github.io/coral`)**](https://ubermetroid.github.io/coral/) · ⭐ [**Star UberMetroid/coral on GitHub**](https://github.com/UberMetroid/coral)
+> 🎓 **Support Coral — [Tuition, Not Coffee — Help send my daughter to college](https://ubermetroid.github.io/tuition-not-coffee)** · 🌐 [**Project Website (`studio2201.github.io/coral`)**](https://studio2201.github.io/coral/) · ⭐ [**Star studio2201/coral on GitHub**](https://github.com/studio2201/coral)
 
 ---
 
@@ -32,17 +32,17 @@ Derived from [Alphabetical App Grid](https://github.com/stuarthayhurst/alphabeti
 
 ## Quick Install
 
-Download `coral@ubermetroid.github.io.shell-extension.zip` from [**GitHub Releases (`v1.3.0`)**](https://github.com/UberMetroid/coral/releases/latest):
+Download `coral@studio2201.github.io.shell-extension.zip` from [**GitHub Releases (`v1.4.0`)**](https://github.com/studio2201/coral/releases/latest):
 
 ```bash
-gnome-extensions install --force coral@ubermetroid.github.io.shell-extension.zip
-gnome-extensions enable coral@ubermetroid.github.io
+gnome-extensions install --force coral@studio2201.github.io.shell-extension.zip
+gnome-extensions enable coral@studio2201.github.io
 ```
 
 Open the 3-tab Libadwaita Preferences window anytime by running:
 
 ```bash
-gnome-extensions prefs coral@ubermetroid.github.io
+gnome-extensions prefs coral@studio2201.github.io
 ```
 
 ---
@@ -53,7 +53,7 @@ gnome-extensions prefs coral@ubermetroid.github.io
 | :--- | :--- |
 | **1. Grid & Auto-Groups** | **Smart Auto-Group to Prevent Overflow Page** toggle, **Auto-Group Strategy** (`Only When Needed to Stop Overflow Page` vs. `Always Group All Apps by Category`), **Target Icons Per Page** (`12–48`, default `24`), **Unpack Auto-Created Category Folders**, **Folder Placement** (`Alphabetical`, `Start of Grid`, `End of Grid`), **Sort Folder Contents Alphabetically** toggle, **Reverse Order (`Z -> A`)** toggle, **Show Pinned Favorites in App Grid** toggle, **Always Open App Grid on First Page** toggle, and **Reset to Coral Defaults**. |
 | **2. Folder Styling** | **Show App Folder Accent Border** toggle, **Accent Border Color** picker, **Quick Color Presets** (*Gruvbox Amber*, *Kelp Emerald*, *Ocean Cyan*, *Coral Red*), **Sync Color Across Suite** (`Sync Suite Color` across all installed Studio 2201 extensions), **Border Width** (`0–8 px`, default `2 px`), and **Border Corner Radius** (`0–36 px`, default `24 px`). |
-| **3. About & Support** | Release version (`v1.3.0`), `GPL-3.0-or-later` license & Stuart Hayhurst (`Alphabetical App Grid`) attribution, **Star Coral on GitHub**, **Tuition, Not Coffee — Help send my daughter to college**, **Project Website**, and **Report an Issue**. |
+| **3. About & Support** | Release version (`v1.4.0`), `GPL-3.0-or-later` license & Stuart Hayhurst (`Alphabetical App Grid`) attribution, **Star Coral on GitHub**, **Tuition, Not Coffee — Help send my daughter to college**, **Project Website**, and **Report an Issue**. |
 
 ---
 
@@ -78,7 +78,7 @@ gjs -m tests/verify.js
 gnome-extensions pack extension --force --out-dir=dist \
   --schema=schemas/org.gnome.shell.extensions.coral.gschema.xml \
   --extra-source=grid --extra-source=ui
-pipx run shexli dist/coral@ubermetroid.github.io.shell-extension.zip
+pipx run shexli dist/coral@studio2201.github.io.shell-extension.zip
 ```
 
 ---
@@ -88,8 +88,8 @@ pipx run shexli dist/coral@ubermetroid.github.io.shell-extension.zip
 If Coral, Shoal, Reef, and Kelp improve your daily Linux workflow, please consider supporting development:
 
 - 🎓 **Sponsor / Donate**: [**Tuition, Not Coffee — Help send my daughter to college**](https://ubermetroid.github.io/tuition-not-coffee)
-- 🌐 **Project Website**: [**ubermetroid.github.io/coral**](https://ubermetroid.github.io/coral/)
-- ⭐ **Star on GitHub**: [**github.com/UberMetroid/coral**](https://github.com/UberMetroid/coral)
+- 🌐 **Project Website**: [**studio2201.github.io/coral**](https://studio2201.github.io/coral/)
+- ⭐ **Star on GitHub**: [**github.com/studio2201/coral**](https://github.com/studio2201/coral)
 
 ---
 
