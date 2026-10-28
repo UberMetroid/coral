@@ -5,7 +5,7 @@
     "url": "https://github.com/studio2201/coral",
     "settings-schema": "org.gnome.shell.extensions.coral",
     "gettext-domain": "coral@studio2201.github.io",
-    "version-name": "1.4.0",
+    "version-name": "1.5.0",
     "shell-version": [
         "45",
         "46",

@@ -127,7 +127,7 @@ function build_grid_and_autogroups_page(ext_settings, settings, signals) {
     const reset_btn = new Gtk.Button({
         label: 'Reset Defaults',
         valign: Gtk.Align.CENTER,
-        css_classes: ['suggested-action'],
+        css_classes: ['destructive-action', 'pill'],
     });
     reset_btn.connect('clicked', () => settings.reset_defaults());
     reset_row.add_suffix(reset_btn);
@@ -171,10 +171,11 @@ export default class CoralPreferences extends ExtensionPreferences {
         window.add(build_grid_and_autogroups_page(ext_settings, settings, signals));
         window.add(build_folder_styling_page(ext_settings, settings, signals));
         window.add(build_about_page(this.metadata?.['version-name']));
-        window.connect('close-request', () => {
+        const cleanup = () => {
             for (const [obj, sig] of signals) obj.disconnect(sig);
             signals.length = 0;
-            return false;
-        });
+        };
+        window.connect('close-request', () => { cleanup(); return false; });
+        window.connect('destroy', cleanup);
     }
 }
