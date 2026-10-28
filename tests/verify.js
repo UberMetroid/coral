@@ -105,7 +105,7 @@ function verify_process_boundaries_and_invariants() {
         'Derived from Alphabetical App Grid by Stuart Hayhurst',
         '[coral] reorder-grid', 'this._injection_manager?.clear()', 'dissolve_coral_folders',
         '"45"', '"50"', '"settings-schema": "org.gnome.shell.extensions.coral"',
-        'name="auto-group-overflow"', 'name="folder-order-position"', '1.5.0',
+        'name="auto-group-overflow"', 'name="folder-order-position"', '1.5.1',
         '"name": "Studio 2201: Coral (App Grid)"', 'Sync Color Across Suite', 'sync_color_across_suite',
         'this.unload_theme()', 'load_stylesheet(file)', 'Support &amp; Community',
     ];
@@ -129,7 +129,7 @@ async function verify_behavioral_and_gtk_suite() {
     GLib.mkdir_with_parents(suite_dir, 0o755);
     const suite_comp = Gio.File.new_for_path(GLib.build_filenamev([suite_dir, 'gschemas.compiled']));
     Gio.File.new_for_path(GLib.build_filenamev([tmp_dir, 'gschemas.compiled'])).copy(suite_comp, Gio.FileCopyFlags.OVERWRITE, null, null);
-    assert(SUITE_COLOR_TARGETS.length === 5 && sync_color_across_suite('#6ad7e1', tmp_dir, mem_backend) === 1 && s.border_color_rgba() === 'rgba(106, 215, 225, 1)', 'suite sync');
+    assert(SUITE_COLOR_TARGETS.length === 6 && sync_color_across_suite('#6ad7e1', tmp_dir, mem_backend) === 1 && s.border_color_rgba() === 'rgba(106, 215, 225, 1)', 'suite sync');
     s.reset_defaults();
 
     assert(s.folder_order_position() === 'alphabetical' && s.sort_folder_contents() && s.auto_group_overflow(), 'defs');
